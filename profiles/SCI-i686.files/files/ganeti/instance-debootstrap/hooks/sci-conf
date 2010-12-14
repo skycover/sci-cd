@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Copy sci.conf for puppet reference
+
+set -e
+
+test "$OS_VARIANT" = "sci" || exit 0
+
+if [ -z "$TARGET" -o ! -d "$TARGET" ]; then
+  echo "Missing target directory"
+  exit 1
+fi
+
+echo Copying sci.conf
+mkdir -p "$TARGET/etc/sci"
+cp /etc/sci/sci.conf "$TARGET/etc/sci/sci.conf"
+
+exit 0

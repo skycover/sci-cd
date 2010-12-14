@@ -1,0 +1,137 @@
+#!/bin/sh
+
+. /etc/sci/sci.conf
+
+DOMAIN_NAME=`grep '^search' /etc/resolv.conf|head -1|awk '{print $2}'`
+SERVICE_NAME="sci"
+SERVICE_IP=`grep '^nameserver' /etc/resolv.conf|head -1|awk '{print $2}'`
+
+case $1 in
+
+cluster)
+
+cat <<EOF
+Parameters detected:
+Domain name: $DOMAIN_NAME
+
+Cluster name: $CLUSTER_NAME
+Cluster IP: $CLUSTER_IP
+
+Service instance name: $SERVICE_NAME
+Service instance IP: $SERVICE_IP
+
+Node 1 name: $NODE1_NAME
+Node 1 IP: $NODE1_IP
+
+EOF
+if [ -n "$NODE2_IP" ]; then
+ cat <<EOF
+Node 2 name: $NODE2_NAME
+Node 2 IP: $NODE2_IP
+EOF
+else
+ cat <<EOF
+WARNING!
+No second node specified.
+Creating SkyCover Infrastructure with on only one node.
+This is strongly not recommended for production use!
+You should fullfill NODE2_NAME and NODE2_IP parameters in /etc/sci/sci.conf
+EOF
+fi
+
+echo "Proceed with cluster creation [y/n]?"
+read i
+if [ "$i" != "y" -a "$i" != "Y" ]; then
+ echo Aborted.
+ exit 1
+fi
+
+echo Creating empty /root/.ssh
+mkdir ~/.ssh
+chmod 700 ~/.ssh
+
+echo Fullfilling /etc/hosts
+cat <<EOF >/etc/hosts
+127.0.0.1       localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+# cluster
+$CLUSTER_IP	$CLUSTER_NAME.$DOMAIN_NAME $CLUSTER_NAME
+# service machine
+$SERVICE_IP	$SERVICE_NAME.$DOMAIN_NAME $SERVICE_NAME puppet.$DOMAIN_NAME puppet
+# first nodes
+$NODE1_IP	$NODE1_NAME.$DOMAIN_NAME $NODE1_NAME
+EOF
+
+echo Fulfilling default /etc/ganeti/networks
+# XXX should iterate thru interfaces
+NIC0_NETWORK=`awk '/^[ \t]*network/{print $2; exit 0}' /etc/network/interfaces`
+NIC0_NETMASK=`awk '/^[ \t]*netmask/{print $2; exit 0}' /etc/network/interfaces`
+NIC0_BROADCAST=`awk '/^[ \t]*broadcast/{print $2; exit 0}' /etc/network/interfaces`
+NIC0_GATEWAY=`awk '/^[ \t]*gateway/{print $2; exit 0}' /etc/network/interfaces`
+
+echo $NIC0_NETWORK $NIC0_NETMASK $NIC0_BROADCAST $NIC0_GATEWAY >>/etc/ganeti/networks
+
+echo Initializing cluster
+gnt-cluster init $CLUSTER_NAME
+test $? -eq 0 || (echo Something wrong; exit 1)
+
+echo Tuning cluster
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.0/bin/pygrub,use_bootloader=True,bootloader_args='',root_path=/dev/xvda1
+test $? -eq 0 || (echo Something wrong; exit 1)
+
+if [ -n "$NODE2_IP" ]; then
+ echo Adding the second node
+ echo "$NODE2_IP       $NODE2_NAME.$DOMAIN_NAME $NODE2_NAME" >>/etc/hosts
+ gnt-node add $NODE2_NAME
+else
+ echo "WARNING! Creating SkyCover Infrastructure with on only one node. This is strongly not recommended for production use!"
+fi
+
+test $? -eq 0 || (echo Something wrong; exit 1)
+
+echo Verify
+gnt-cluster verify
+
+gnt-node list
+
+echo If all is ok, proceed with "$0 service"
+
+;;
+
+service)
+
+if [ -z "$SERVICE_NAME" -o -z "$SERVICE_IP" ]; then
+ echo You should carefully fullfill parameters in /etc/sci/sci.conf
+ echo Aborted.
+ exit 1
+fi
+
+echo Creating service machine $SERVICE_NAME
+if [ -n "$NODE2_NAME" ]; then
+  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=256m -n $NODE1_NAME:$NODE2_NAME $SERVICE_NAME
+else
+  echo "WARNING! Creating the service instance without fallback support. This is strongly not recommended for production use!"
+  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=256m -n $NODE1_NAME $SERVICE_NAME
+fi
+
+;;
+
+show)
+cat /etc/sci/sci.conf
+
+;;
+
+*)
+
+echo "Usage: $0 {cluster|service|show}"
+
+;;
+
+esac

@@ -1,0 +1,23 @@
+SkyCover Infrastructure installation CD-ROM
+
+http://projects.skycover.ru/projects/sci-cd/
+
+This is the Debian/GNU Linux custom CD-ROM, which helps to
+
+* Install Ganeti cluster with Xen and DRBD (http://code.google.com/p/ganeti/)
+* Tune up some Xen Linux system performance parameters
+* Set up virtual instance with Puppet, BIND9 and Approx
+
+Includes:
+
+* XEN-hypervisor 4.0 amd64
+* Dom0 i686
+* drbd
+* vlan
+* ganeti
+* puppet
+* zabbix client
+* amanda client
+* and various tools
+
+You'll need "uuencode" to build the project (apt-get install sharutils)

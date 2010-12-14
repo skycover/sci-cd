@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+/etc/init.d/bind9 stop
+if [ -d /etc/bind -a -d /var/lib/named/etc -a ! -d /var/lib/named/etc/bind ]; then
+	/bin/mv /etc/bind /var/lib/named/etc/
+	ln -s /var/lib/named/etc/bind /etc/bind
+else
+	echo Directory prereqs not meet
+	exit 1
+fi
+/etc/init.d/bind9 start

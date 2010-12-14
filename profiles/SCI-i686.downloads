@@ -1,0 +1,17 @@
+linux-image-xen-686
+zabbix-server-mysql
+zabbix-frontend-php
+zabbix-agent
+amanda-server
+amanda-client
+exim4-daemon-heavy
+puppetmaster
+iproute
+ntp
+ntpdate
+bind9
+approx
+squid
+dnsutils
+sudo
+console-cyrillic

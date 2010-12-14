@@ -1,0 +1,71 @@
+simple-cdd	simple-cdd/profiles multiselect SCI-i686
+tasksel		tasksel/first multiselect 
+
+# Also used kernel string in *.conf to auto-accept all of theese
+d-i	debian-installer/country	string	US
+d-i	localechooser/shortlist	select	US
+d-i	debian-installer/locale	select	en_US.UTF-8
+
+d-i		clock-setup/utc boolean true
+clock-setup	clock-setup/ntp	boolean	false
+
+d-i	console-keymaps-at/keymap select us
+d-i	console-tools/archs	select	at
+
+# Country settings. 
+# XXX probably skip and latter puppet work will be more useful
+d-i	localechooser/supported-locales multiselect en_US.UTF-8, ru_RU.UTF-8
+d-i     time/zone       select  Europe/Moscow
+tzsetup-udeb	tzsetup/country/RU	select	Europe/Moscow
+
+# You can turn this off and remove console-cyrillic from *.packages
+d-i	console-cyrillic/kbdtype	select	Russian Winkeys
+d-i	console-cyrillic/toggle	select	Control+Shift
+d-i	console-cyrillic/switch	select	No temporary switch
+
+# XXX grub fails the first install, and then get installed ok. don't know, how to skip
+#d-i grub-installer/skip boolean true
+#d-i lilo-installer/skip boolean true
+#d-i	grub-installer/only_debian boolean true
+#d-i	grub-installer/with_other_os boolean true
+
+passwd   passwd/make-user    boolean false
+
+d-i netcfg/choose_interface select auto
+d-i netcfg/disable_dhcp boolean true
+d-i netcfg/wireless_wep string 
+
+#base-config	apt-setup/uri_type  select cdrom
+#base-config	apt-setup/cd/another  boolean false
+#base-config	apt-setup/another boolean false
+#apt-mirror-setup	apt-setup/use_mirror    boolean false
+#d-i	apt-setup/use_mirror    boolean false
+#apt-mirror-setup	apt-setup/no_mirror	boolean	true
+#base-config apt-setup/security-updates  boolean false
+#d-i apt-setup/non-free  boolean true
+#d-i apt-setup/contrib boolean true
+d-i apt-setup/non-free boolean true
+d-i apt-setup/contrib boolean true
+d-i apt-setup/use_mirror boolean false
+d-i apt-setup/services-select multiselect
+d-i apt-setup/security_host string
+d-i apt-setup/volatile_host string
+
+
+exim4-config  exim4/dc_eximconfig_configtype  select no configuration at this time
+# XXX use root, but check for mailing permissions
+exim4-config  exim4/dc_postmaster   string root
+
+#d-i finish-install/reboot_in_progress note
+base-config base-config/intro note 
+base-config base-config/login note 
+d-i     popularity-contest/participate  boolean false
+
+### simple-cdd commands
+
+# you may add to the following commands by including a ";" followed by your
+# shell commands.
+
+# loads the simple-cdd-profiles udeb to which asks for which profiles to use,
+# load the debconf preseeding and queue packages for installation.
+d-i preseed/early_command string anna-install simple-cdd-profiles
