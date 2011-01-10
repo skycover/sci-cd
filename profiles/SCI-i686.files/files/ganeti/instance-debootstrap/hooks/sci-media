@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Copy SCI CD-ROM packages repository for approx
+
+set -e
+
+test "$OS_VARIANT" = "sci" || exit 0
+
+if [ -z "$TARGET" -o ! -d "$TARGET" ]; then
+  echo "Missing target directory"
+  exit 1
+fi
+
+echo Copying SCI CD-ROM repository
+mkdir -p "$TARGET/media/sci"
+cp -r /media/sci/dists /media/sci/pool "$TARGET/media/sci"
+
+exit 0
