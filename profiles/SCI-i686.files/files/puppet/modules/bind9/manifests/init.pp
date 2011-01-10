@@ -1,49 +1,7 @@
 $bind9Templates="/etc/puppet/modules/bind9/templates"
 
-class bind9 {
-	package { [ 'bind9' ]: ensure => installed, allowcdrom => true } 
-	file { "/etc/bind/named.conf.options":
-		owner => "root",
-		group => "bind",
-		mode => 0640,
-		content => template("$bind9Templates/int/named.conf.options.erb"),
-		require => Package['bind9'],
-	}
-	file { "/etc/bind/named.conf.local":
-		owner => "root",
-		group => "bind",
-		mode => 0640,
-		content => template("$bind9Templates/int/named.conf.local.erb"),
-		require => Package['bind9'],
-	}
-	file { "/etc/bind/master":
-		owner => "root",
-		group => "root",
-		mode => 755,
-		ensure => [directory, present],
-		require => Package['bind9'],
-	}
-	file { "/etc/bind/master/$domain":
-		owner => "root",
-		group => "bind",
-		mode => 0640,
-		content => template("$bind9Templates/int/zone.erb"),
-		require => [ Package['bind9'],
-                             File['/etc/bind/master'],
-                           ],
-	}
-	exec { "/usr/sbin/rndc reload":
-		subscribe => File[ "/etc/bind/named.conf.options",
-				   "/etc/bind/named.conf.local",
-				   "/etc/bind/master/$domain"
-				 ],
-		refreshonly => true,
-	}
-
-}
-
 class bind9_chroot {
-	include bind9
+	package { [ 'bind9' ]: ensure => installed, allowcdrom => true } 
 	file { [
 		"/var/lib/named",
 		"/var/lib/named/dev",
@@ -131,4 +89,46 @@ class bind9_chroot {
 		subscribe => File['/etc/passwd'],
 	}
 	
+}
+
+class bind9_sci {
+	include bind9_chroot
+	file { "/etc/bind/named.conf.options":
+		owner => "root",
+		group => "bind",
+		mode => 0640,
+		content => template("$bind9Templates/sci/named.conf.options.erb"),
+		require => Package['bind9'],
+	}
+	file { "/etc/bind/named.conf.local":
+		owner => "root",
+		group => "bind",
+		mode => 0640,
+		content => template("$bind9Templates/sci/named.conf.local.erb"),
+		require => Package['bind9'],
+	}
+	file { "/etc/bind/master":
+		owner => "root",
+		group => "root",
+		mode => 755,
+		ensure => [directory, present],
+		require => Package['bind9'],
+	}
+	file { "/etc/bind/master/$domain":
+		owner => "root",
+		group => "bind",
+		mode => 0640,
+		content => template("$bind9Templates/sci/zone.erb"),
+		require => [ Package['bind9'],
+                             File['/etc/bind/master'],
+                           ],
+	}
+	exec { "/usr/sbin/rndc reload":
+		subscribe => File[ "/etc/bind/named.conf.options",
+				   "/etc/bind/named.conf.local",
+				   "/etc/bind/master/$domain"
+				 ],
+		refreshonly => true,
+	}
+
 }
