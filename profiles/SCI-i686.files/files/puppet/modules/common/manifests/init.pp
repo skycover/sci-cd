@@ -1,17 +1,6 @@
 class common_profile {
-	include root_bashrc, vim, common_packages, sysstat, apt
+	include root_bashrc, vim, common_packages, sysstat
 	# ntp, zabbix-agent
-}
-
-class apt {
-    file { "/etc/apt/sources.list":
-        owner => "root", group => "root", mode => 0644,
-	content => template("/etc/puppet/modules/common/templates/sources.list.erb")
-    }
-    exec{'/usr/bin/apt-get update':
-        refreshonly => true,
-        subscribe => File['/etc/apt/sources.list']
-    }
 }
 
 class common_packages {
