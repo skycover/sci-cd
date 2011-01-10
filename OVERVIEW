@@ -1,0 +1,102 @@
+SCI-CD cluster setup instructions
+
+0. THE PROJECTS
+
+"SkyCover Infrastructure" (SCI) is the project of multifunction, multipurpose,
+mostly automated server infrastructure, assisted with automatic monitoring,
+backup and audit tasks.
+
+"SCI-CD" is the project of deployment engine for cheap and flexible virtual HA
+cluster, the ground level for SCI.
+
+1. INTRODUCTION
+
+SCI-CD is created to make easy the deployment of the virtual infrastructure,
+based on the Ganeti project (http://code.google.com/p/ganeti/).
+
+With Ganeti you will be able to create the "farm" of several nodes (computers),
+each with it's own storage and to create the cluster environment over them when
+each virtual instance will be started on the one node and backed up on the
+another node with on-line disk syncronization (via DRBD) and fast failover.
+
+This provides the way to made cheap redundant high avialable systems.
+
+Ganeti is also able to manage "regular", stand-alone virtual instances.
+
+SCI core consists of two Ganeti nodes and one service instance (virtual
+machine).
+
+The service instance provides:
+* DNS for local zones, forwarders (BIND9 chrooted),
+* Configuation management, able to tune up new nodes and instances (Puppet),
+* Apt-proxy, with uplink to debian mirrors and also with local repository,
+copied from SCI-CD CD-ROM (Approx).
+
+2. HARDWARE
+
+SCI core hardware is based on the two nodes which can be any two computers -
+the major brands, such as HP, IBM, the "China brands", such as
+SuperMicro or self-maiden servers or even workstations.
+
+Of course, the performance of your system will be very dependent on the
+hardware you chosed - the CPU, memory, RAID subsystem - all will matters as
+usual for the performance, but mostly - not for high availability capabilities.
+
+The HA features are supported by providing two separate nodes with their own
+storage subsystems and on-line storage synchronization between them. In the most
+cases this level of redundancy is sufficient to cover the data losses and
+service interrupts even with the cheap nodes.
+
+Of course, the systems which can't be interrupted even for a few minutes must be
+sized and analyzed excluively.
+
+3. LOCAL NETWORKING
+
+All nodes should be attached to one common TCP/IP network segment via the main
+interface (see Ganeti manuals).
+
+The SCI setup supports 802.1q VLAN tagging, so you can give your instances the
+interfaces in different network segments.
+
+The nodes need to be interconnected with the fast TCP/IP interlink to transfer
+storage data. 1GigE is recommended.
+
+It is possible (and recommended) that the storage interlink should be separated
+from the main TCP/IP access interfaces. In the other words, each node should
+have a two network adapters and at least one of them should support 1GigE.
+
+For only two nodes the storage network may be constructed without an Ethernet
+switch, using simple cat5e cross-over cable.
+
+NOTE: In this version of SCI-CD the separation of the storage interlink is
+not supported. Will be fixed shortly.
+
+4. INTERNET NETWORKING
+
+In order to access to the internet you should connect your local network segment
+to the Internet router.
+
+The simplest way is to use the separate router with NAT.
+
+The more advanced way is to construct the advanced multifunction router/firewall
+on the cluster's virtual instance. This setup is not included in SCI-CD at
+present, but you always can do it manually.
+
+5. DEBIAN REPOSITORIES UPLINK
+
+The service instance provides "approx" apt proxy, which can be uplinked to
+regular Debian mirrors.
+
+Alternatively you can uplink it to the intermediate apt proxies in your LAN.
+
+In any case, the service instance's "approx" is loaded by the copy of the
+repository from the SCI-CD CD-ROM. It can be used even in absence of the uplink
+to the external repositories.
+
+All the available repositories are pushed automatically into the sources.lists
+of the puppet-client instances (which are by default all the nodes and
+instances).
+
+6. INSTALLATION
+
+Please read INSTALL for instructions.

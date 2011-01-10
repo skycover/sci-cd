@@ -20,4 +20,6 @@ Includes:
 * amanda client
 * and various tools
 
-You'll need "uuencode" to build the project (apt-get install sharutils)
+You'll need "uuencode" (sharutils) to build the project.
+
+Read OVERVIEW next.
