@@ -1,3 +1,5 @@
+import "lib.pp"
+
 class common_profile {
 	include root_bashrc, vim, common_packages, sysstat
 	# ntp, zabbix-agent
