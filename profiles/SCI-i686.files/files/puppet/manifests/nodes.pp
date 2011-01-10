@@ -1,9 +1,7 @@
 node 'default' {
-	Package { allowcdrom => true }
-	include common_profile
+	include common_profile, apt_local_repos
 }
 
 node 'sci' {
-	Package { allowcdrom => true }
-	include common_profile, bind9_chroot, approx
+	include common_profile, bind9_sci, approx_local, apt_local_repos
 }
