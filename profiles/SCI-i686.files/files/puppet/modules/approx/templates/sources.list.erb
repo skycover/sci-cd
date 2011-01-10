@@ -1,7 +1,4 @@
 deb http://apt.<%= domain %>:9999/cdrom squeeze main
-<% if has_variable?("sci_apt_cdrom") then -%>
-<%= sci_apt_cdrom %>
-<% end -%>
-deb http://apt.<%= domain %>:9999/debian squeeze main non-free contrib
-deb http://apt.<%= domain %>:9999/debian squeeze-proposed-updates main non-free contrib
-deb http://apt.<%= domain %>:9999/security squeeze/updates main non-free contrib
+#deb http://apt.<%= domain %>:9999/debian squeeze main non-free contrib
+#deb http://apt.<%= domain %>:9999/debian squeeze-proposed-updates main non-free contrib
+#deb http://apt.<%= domain %>:9999/security squeeze/updates main non-free contrib
