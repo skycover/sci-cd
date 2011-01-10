@@ -34,6 +34,9 @@ if [ "$OS_VARIANT" = "sci" ]; then
  echo Installing packages for SCI
  echo START=no >"$TARGET/etc/default/puppetmaster"
  echo N|chroot "$TARGET" apt-get -y --force-yes install puppetmaster
+ echo exit >"$TARGET/etc/default/openbsd-inetd"
+ echo N|chroot "$TARGET" apt-get -y --force-yes install approx
+ rm "$TARGET/etc/default/openbsd-inetd"
 fi
 
 # execute cleanups
