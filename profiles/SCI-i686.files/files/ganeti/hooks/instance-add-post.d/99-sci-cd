@@ -1,4 +1,0 @@
-#!/bin/sh
-test "$GANETI_INSTANCE_PRIMARY" = "`hostname`" || exit 0
-# If really started, delegate to real script
-xm list "$GANETI_INSTANCE_NAME"|grep -q "$GANETI_INSTANCE_NAME" && `dirname $0`/../instance-start-post.d/99-sci-cd
