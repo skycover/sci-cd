@@ -25,6 +25,15 @@ Node 1 IP: $NODE1_IP
 
 EOF
 if [ -n "$NODE2_IP" ]; then
+ if [ -n "$NODE1_SAN_IP" -a -z "$NODE2_SAN_IP" ]; then
+cat <<EOF
+ERROR!
+NODE1_SAN_IP is specified but NODE2_SAN_IP is empty.
+Both values must be set or unset.
+The continue will cause error. Aborting.
+EOF
+  exit 1
+ fi
  cat <<EOF
 Node 2 name: $NODE2_NAME
 Node 2 IP: $NODE2_IP
@@ -79,7 +88,10 @@ NIC0_GATEWAY=`awk '/^[ \t]*gateway/{print $2; exit 0}' /etc/network/interfaces`
 echo $NIC0_NETWORK $NIC0_NETMASK $NIC0_BROADCAST $NIC0_GATEWAY >>/etc/ganeti/networks
 
 echo Initializing cluster
-gnt-cluster init $CLUSTER_NAME
+if [ -n "$NODE1_SAN_IP" ]; then
+ SECONDARY_IP="-s $NODE1_SAN_IP"
+fi
+gnt-cluster init $SECONDARY_IP $CLUSTER_NAME
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
@@ -88,8 +100,11 @@ test $? -eq 0 || (echo Something wrong; exit 1)
 
 if [ -n "$NODE2_IP" ]; then
  echo Adding the second node
+ if [ -n "$NODE2_SAN_IP" ]; then
+  SECONDARY_IP="-s $NODE2_SAN_IP"
+ fi
  echo "$NODE2_IP       $NODE2_NAME.$DOMAIN_NAME $NODE2_NAME" >>/etc/hosts
- gnt-node add $NODE2_NAME
+ gnt-node add $SECONDARY_IP $NODE2_NAME
 else
  echo "WARNING! Creating SkyCover Infrastructure with on only one node. This is strongly not recommended for production use!"
 fi
