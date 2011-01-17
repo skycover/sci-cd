@@ -105,6 +105,8 @@ if [ -n "$NODE2_IP" ]; then
  fi
  echo "$NODE2_IP       $NODE2_NAME.$DOMAIN_NAME $NODE2_NAME" >>/etc/hosts
  gnt-node add $SECONDARY_IP $NODE2_NAME
+ echo Copying /etc/ganeti/networks to $NODE2_NAME:
+ scp /etc/ganeti/networks $NODE2_NAME:/etc/ganeti/networks
 else
  echo "WARNING! Creating SkyCover Infrastructure with on only one node. This is strongly not recommended for production use!"
 fi
