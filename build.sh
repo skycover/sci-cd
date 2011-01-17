@@ -28,4 +28,7 @@ EOF
  cd ..
 fi 
 
-build-simple-cdd --conf profiles/$profile.conf
+if [ -d local ]; then
+ lpackages="--local-packages local"
+fi
+build-simple-cdd $lpackages --conf profiles/$profile.conf
