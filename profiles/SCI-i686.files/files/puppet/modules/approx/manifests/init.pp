@@ -74,15 +74,22 @@ class apt {
 
 # apt key for local repos
 class apt_local_repos {
-    include apt
-    file { "/etc/sci/sci.pub":
-        owner => "root", group => "root", mode => 0644,
-	source => 'puppet:///modules/approx/sci.pub',
-    }
-    exec {"/usr/bin/apt-key add /etc/sci/sci.pub":
-    	require => File["/etc/sci/sci.pub"],
-    	subscribe => File["/etc/sci/sci.pub"],
-	notify => Exec["/usr/bin/apt-get update"],
-	refreshonly => true,
-    }
+	include apt
+	file { "/etc/sci":
+		owner => "root",
+		group => "root",
+		mode => 0755,
+		ensure => [directory, present],
+	}
+	file { "/etc/sci/sci.pub":
+		owner => "root", group => "root", mode => 0644,
+		source => 'puppet:///modules/approx/sci.pub',
+	}
+	exec { apt-key-add-sci:
+		command => "/usr/bin/apt-key add /etc/sci/sci.pub",
+		require => File["/etc/sci/sci.pub"],
+		subscribe => File["/etc/sci/sci.pub"],
+		notify => Exec["/usr/bin/apt-get update"],
+		refreshonly => true,
+	}
 }
