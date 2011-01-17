@@ -167,7 +167,8 @@ EXTRA_PKGS="linux-image-xen-686,libc6-xen"
 EOF
 
 ## Add "xm sched-credit -d0 -w512" to /etc/rc.local
-## Add sysfs tuning for better disk latency and to avoid deadlocks
+# equal priority of Dom0 make problems on the block devices
+## Add sysfs tuning for better disk latency and to avoid kernel problems
 
 cat <<EOF >$target/etc/rc.local
 #!/bin/sh -e
@@ -196,6 +197,10 @@ exit 0
 EOF
 
 chmod +x $target/etc/rc.local
+
+## Add workaround for bnx2x NIC on HP Proliant and Blade servers
+# https://bugzilla.redhat.com/show_bug.cgi?id=518531
+echo "options bnx2x disable_tpa=1" >$target/etc/modprobe.d/sci.conf
 
 ## Set up symlinks /boot/vmlinuz-2.6-xenU, /boot/initrd-2.6-xenU
 
