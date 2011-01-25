@@ -1,7 +1,7 @@
 node 'default' {
-	include common_profile, apt_local_repos
+	include common_profile, sources_list_local
 }
 
 node 'sci' {
-	include common_profile, bind9_sci, approx_local, apt_local_repos
+	include common_profile, bind9_sci, approx_local, sources_list_local
 }

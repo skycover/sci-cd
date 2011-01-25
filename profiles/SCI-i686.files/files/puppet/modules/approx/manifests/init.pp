@@ -61,20 +61,8 @@ class approx_local {
 	}
 }
 
-class apt {
-    file { "/etc/apt/sources.list":
-        owner => "root", group => "root", mode => 0644,
-	content => template("/etc/puppet/modules/approx/templates/sources.list.erb")
-    }
-    exec{'/usr/bin/apt-get update':
-        refreshonly => true,
-        subscribe => File['/etc/apt/sources.list'],
-    }
-}
-
-# apt key for local repos
-class apt_local_repos {
-	include apt
+# sources.list with apt key for local repos
+class sources_list_local {
 	file { "/etc/sci":
 		owner => "root",
 		group => "root",
@@ -91,5 +79,15 @@ class apt_local_repos {
 		subscribe => File["/etc/sci/sci.pub"],
 		notify => Exec["/usr/bin/apt-get update"],
 		refreshonly => true,
+	}
+	file { "/etc/apt/sources.list":
+		owner => "root", group => "root", mode => 0644,
+		content => template("/etc/puppet/modules/approx/templates/sources.list.erb"),
+	}
+	exec{ apt-get-update:
+		command => '/usr/bin/apt-get update',
+		refreshonly => true,
+		require => File["/etc/sci/sci.pub"],
+		subscribe => File['/etc/apt/sources.list'],
 	}
 }
