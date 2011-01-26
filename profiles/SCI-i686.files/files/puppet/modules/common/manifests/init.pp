@@ -84,23 +84,22 @@ class vim {
 
 class ssh_server {
 
-    package { 'openssh-server':
-        ensure => installed
-    }
+	package { 'openssh-server':
+		ensure => installed
+	}
 
-    file { 'sshdconfig':
-        name => '/etc/ssh/sshd_config',
-        owner => root,
-        group => root,
-        mode  => 644,
-        #content => template( 'ssh/sshd_config.erb' ),
-        #source => 'puppet:///modules/ssh/sshd_config',
-        require => Package['openssh-server']
-    }
+	file { 'sshdconfig':
+		name => '/etc/ssh/sshd_config',
+		owner => root,
+		group => root,
+		mode  => 644,
+		#content => template( 'ssh/sshd_config.erb' ),
+		#source => 'puppet:///modules/ssh/sshd_config',
+		require => Package['openssh-server']
+	}
 
-    service { 'ssh':
-        subscribe => File[ 'sshdconfig' ],
-        require => [ Package['openssh-server'] ]
-    }
-
+	service { 'ssh':
+		subscribe => File[ 'sshdconfig' ],
+		require => [ Package['openssh-server'] ]
+	}
 }
