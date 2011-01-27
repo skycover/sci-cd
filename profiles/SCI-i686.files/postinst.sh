@@ -238,7 +238,7 @@ fi
 
 test -n "$proc_mounted" && umount /proc
 
-## Add ganeti hooks to attach SCI-CD to debootstrap-type instances just after startup as xvdc
+## Add ganeti hooks if any
 
 mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
