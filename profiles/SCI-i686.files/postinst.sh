@@ -217,12 +217,10 @@ fi
 
 ## Copy-in SCI-CD iso image to /var/lib/cdimages, mount to /media/sci, set up sources.list
 
-dev=`grep '/cdrom' /proc/mounts|cut -d' ' -f1`
+# when installing from USB stick, two /cdrom mounts are shown
+# XXX 'head -1' may be a wrong choice here, but will not differ them at present
+dev=`grep '/cdrom' /proc/mounts|head -1|cut -d' ' -f1`
 
-if [ -n "$dev" -a ! -e "$dev" ]; then
-	echo ...Creating CD-ROM device $dev
-	echo ... only stub here
-fi
 if [ -n "$dev" -a -e "$dev" ]; then
 	echo ...Copying CD-ROM image
 	dd if=$dev of=$target/var/lib/cdimages/sci.iso
