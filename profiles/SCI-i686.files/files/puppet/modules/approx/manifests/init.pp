@@ -77,7 +77,7 @@ class sources_list_local {
 		command => "/usr/bin/apt-key add /etc/sci/sci.pub",
 		require => File["/etc/sci/sci.pub"],
 		subscribe => File["/etc/sci/sci.pub"],
-		notify => Exec["/usr/bin/apt-get update"],
+		notify => Exec["apt-get-update"],
 		refreshonly => true,
 	}
 	file { "/etc/apt/sources.list":
