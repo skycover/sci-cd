@@ -253,6 +253,7 @@ echo sci >>$target/etc/ganeti/instance-debootstrap/variants.list
 
 ## Add SCI deploing scripts
 cp -r files/sci $target/etc/
+cp -r files/os $target/usr/share/ganeti/
 cp files/sbin/* $target/usr/local/sbin/
 mkdir $target/etc/sci
 cat <<EOF >$target/etc/sci/sci.conf
