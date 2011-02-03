@@ -251,10 +251,13 @@ mkdir -p $target/etc/ganeti/instance-debootstrap/variants
 cp -r files/ganeti/instance-debootstrap/variants/* $target/etc/ganeti/instance-debootstrap/variants/
 echo sci >>$target/etc/ganeti/instance-debootstrap/variants.list
 
-## Add SCI deploing scripts
-cp -r files/sci $target/etc/
+## Add ganeti OS "windows" scripts (ntfsclone - based)
 cp -r files/os $target/usr/share/ganeti/
+
+## Add SCI deploing scripts
 cp files/sbin/* $target/usr/local/sbin/
+
+## Filling SCI configuration template
 mkdir $target/etc/sci
 cat <<EOF >$target/etc/sci/sci.conf
 # The cluster's name and IP. They MUST be different from node names
