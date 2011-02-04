@@ -32,8 +32,8 @@ fi
 if [ "$PARTITION_STYLE" = "none" ]; then
   filesystem_dev=$blockdev
 elif [ "$PARTITION_STYLE" = "msdos" ]; then
-  # Create one big partition, and make it bootable
-  format_disk0 $blockdev
+  # Restore saved partition and install mbr
+  restore_part_disk0 $blockdev
   filesystem_dev=$(map_disk0 $blockdev)
   CLEANUP+=("unmap_disk0 $blockdev")
 else
@@ -42,7 +42,6 @@ else
 fi
 
 ( /usr/sbin/ntfsclone --restore-image --overwrite $filesystem_dev - )
-#( /usr/local/bin/ntfsreloc --restore-image --overwrite $filesystem_dev - )
 
 # execute cleanups
 cleanup

@@ -41,8 +41,8 @@ fi
 vol_type=$($VOL_TYPE $filesystem_dev)
 
 if [ "$vol_type" = "ntfs" ]; then
-  echo "$filesystem_dev" > /tmp/dev
-  /usr/sbin/ntfsclone  --save-image --output - $filesystem_dev
+  save_part_disk0 $blockdev
+  /usr/sbin/ntfsclone --save-image --output - $filesystem_dev
 fi
 
 # execute cleanups

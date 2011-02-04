@@ -91,9 +91,35 @@ format_disk0() {
   # some versions of sfdisk need manual specification of 
   # head/sectors for devices such as drbd which don't 
   # report geometry
-  sfdisk -H 255 -S 63 --quiet --Linux "$1" <<EOF
+  sfdisk -H 255 -S 63 --quiet --Linux --DOS "$1" <<EOF
 0,,L,*
 EOF
+  install-mbr "$1"
+}
+
+save_part_disk0() {
+  # Save partition table as the sfdisk's ouput padded with zeroes
+  # to 1024b. It will go tho the start of the saving image.
+  tmp=`mktemp --tmpdir=/tmp sfdisk-exp.XXXXXX`
+  if [ -z "$tmp" ]; then
+    echo "Unable to create temp file"
+    exit 1
+  fi
+  sfdisk -d "$1" >"$tmp"
+  dd if=/dev/zero bs=1024 count=1 >>"$tmp"
+  dd if="$tmp" bs=1024 count=1
+  rm "$tmp"
+}
+
+restore_part_disk0() {
+  # Restore partition table from the first 1024b of the image.
+  # If the target disk will be bigger it will be in the customer's
+  # responsibility.
+  # Some versions of sfdisk need manual specification of 
+  # head/sectors for devices such as drbd which don't 
+  # report geometry
+  dd bs=1024 count=1|tr -d '\000'|sfdisk -H 255 -S 63 --Linux --DOS "$1"
+  install-mbr "$1"
 }
 
 map_disk0() {
