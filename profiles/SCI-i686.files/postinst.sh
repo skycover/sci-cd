@@ -35,7 +35,8 @@ for i in \
  /etc/default/grub \
  /etc/default/puppet \
  /etc/default/xendomains \
- /etc/modules
+ /etc/modules \
+ /etc/rsyslog.conf
 do
  cp $target/$i backup
 done
@@ -56,6 +57,10 @@ if [ -f $grub_file -a -n "$grub_entry" ]; then
 else
  echo Not configuring GRUB
 fi
+
+## Set /var/log/kern.log to unbuffered mode
+
+./strreplace.sh $target/etc/rsyslog.conf "^kern\.\*[\t ]+-\/var\/log\/kern.log" 'kern.*\t\t\t\t/var/log/kern.log'
 
 ## Set hostname to fqdn
 ## Set xend-config.sxp: xend-relocation-hosts-allow to allow relocation from local domain (XXX broken)
@@ -124,6 +129,27 @@ cat <<EOF >>interfaces
         bridge_fd 0
 EOF
  
+## Add example of additional VLAN interface w/o assigned IP
+
+cat <<EOF >>interfaces
+
+# The example of addidtional VLAN interface with bridge
+# w/o assigning node any IP address
+#
+#auto eth0.VLAN_NO
+#iface eth0.VLAN_NO inet manual
+#        up ifconfig eth0.VLAN_NO up
+#
+#auto xen-VLAN_NAME
+#iface xen-VLAN_NAME inet manual
+#        up brctl addbr xen-VLAN_NAME
+#        up brctl addif xen-VLAN_NAME eth0.8
+#        up brctl stp xen-VLAN_NAME off
+#        up ifconfig xen-VLAN_NAME up
+#        down ifconfig xen-VLAN_NAME down
+#        down brctl delbr xen-VLAN_NAME
+EOF
+
 cat interfaces >$ifs
 
 ## Set up module loading (drbd, 8021q)
