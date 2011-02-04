@@ -1,8 +1,10 @@
 xen-linux-system-2.6.32-5-xen-686
+firmware-linux
 xen-hypervisor-4.0-amd64
 xen-utils-4.0
 libc6-xen
 xenstore-utils
+xen-qemu-dm-4.0
 drbd8-utils
 vlan
 bridge-utils
@@ -22,3 +24,4 @@ libruby
 psmisc
 git
 ntfsprogs
+mbr
