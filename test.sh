@@ -8,4 +8,4 @@ if [ "$1" = "inst" ]; then
  method=d
 fi
 
-kvm -enable-kvm -hda qemu-test.hda.img -hdb qemu-test.hdb.img -cdrom images/debian-testing-i386-CD-1.iso -boot $method
+kvm -enable-kvm -hda qemu-test.hda.img -hdb qemu-test.hdb.img -cdrom images/debian-SkyCover-amd64-CD-1.iso -boot $method
