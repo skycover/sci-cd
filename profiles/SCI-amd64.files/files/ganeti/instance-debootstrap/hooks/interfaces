@@ -87,10 +87,10 @@ EOF
        exit 1
      fi
 
-     eval NIC_${i}_NETWORK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $1}'`
-     eval NIC_${i}_NETMASK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $2}'`
-     eval NIC_${i}_BROADCAST=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $3}'`
-     eval NIC_${i}_GATEWAY=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $4}'`
+     eval NIC_${i}_NETWORK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $1; exit 0}'`
+     eval NIC_${i}_NETMASK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $2; exit 0}'`
+     eval NIC_${i}_BROADCAST=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $3; exit 0}'`
+     eval NIC_${i}_GATEWAY=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $4; exit 0}'`
 
      if [ -z "`eval echo "\\$NIC_${i}_NETWORK"`" ]; then
        echo Unable to get interface settings for network $NETWORKNUM NIC $i
