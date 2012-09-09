@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+# Make sure we're not working on the root directory
+if [ -z "$TARGET" -o "$TARGET" = "/" ]; then
+    echo "Invalid target directory '$TARGET', aborting." 1>&2
+    exit 1
+fi
+
+if [ "$(mountpoint -d /)" = "$(mountpoint -d "$TARGET")" ]; then
+    echo "The target directory seems to be the root dir, aborting."  1>&2
+    exit 1
+fi
+
+set -x
+
+if [ "$HYPERVISOR" = "xen-pvm" ]; then
+    echo "xen-pvm hypervisor detected, adopting sci-cd"
+    mkdir -p "$TARGET/media/cdrom"
+    # There is an issue cause we unable to use apt-cdrom during installation
+    cat <<EOF >"$TARGET/etc/apt/sources.list"
+deb file:/media/cdrom/ squeeze main
+EOF
+    cat <<EOF >>"$TARGET/etc/fstab"
+/dev/xvdc /media/cdrom iso9660 noauto 0 0
+EOF
+fi
+
+# Due to issue, /media/apt is the really right place
+cat <<EOF >>"$TARGET/etc/apt/apt.conf.d/99-sci"
+Acquire::cdrom::mount "/media/apt";
+EOF
+
+# Make it to not verify Release.gpg
+cat <<EOF >"$TARGET/etc/apt/apt.conf.d/00trustcdrom"
+APT::Authentication::TrustCDROM "true";
+EOF
+
+exit 0

@@ -1,0 +1,28 @@
+$TTL 1h
+
+<%= domain %>. IN SOA ns1.<%= domain %>. postmaster.<%= domain %>. (
+ 0000000001 ; Serial
+ 4h         ; Refresh
+ 2h         ; Retry
+ 500h       ; Expire
+ 3h       ) ; Negative TTL
+
+@ IN NS ns.<%= domain %>.
+
+@ IN MX 10 mail.<%= domain %>.
+     TXT   "v=spf1 a:mail.<%= domain %> -all"
+
+ns	IN A <%= ipaddress %>
+; this is the wrong record. actual mail server should be different
+mail	IN A <%= ipaddress %>
+sci	IN A <%= ipaddress %>
+apt	CNAME sci
+ntp	CNAME sci
+puppet	CNAME sci
+<%= sci_cluster_name %>	IN A <%= sci_cluster_ip %>
+<%= sci_node1_name %>	IN A <%= sci_node1_ip %>
+<% if has_variable?("sci_node2_name") -%>
+<%= sci_node2_name %>	IN A <%= sci_node2_ip %>
+<% end -%>
+
+; here you can put any other records

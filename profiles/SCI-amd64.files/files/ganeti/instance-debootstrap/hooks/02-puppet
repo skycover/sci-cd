@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Configuring puppet
+
+set -e
+
+. common.sh
+
+if [ -z "$TARGET" -o ! -d "$TARGET" ]; then
+  echo "Missing target directory"
+  exit 1
+fi
+
+# enable puppet autostart
+cat <<EOF >"$TARGET/etc/default/puppet"
+# Defaults for puppet - sourced by /etc/init.d/puppet
+
+# Start puppet on boot?
+START=yes
+
+# Startup options
+DAEMON_OPTS=""
+EOF
+
+## Allow plugins and facts syncing for puppet
+echo "pluginsync = true" >>$TARGET/etc/puppet/puppet.conf
