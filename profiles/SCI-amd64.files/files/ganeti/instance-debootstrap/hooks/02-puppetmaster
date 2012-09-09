@@ -17,6 +17,7 @@ echo Configuring puppetmaster
 
 mv "$TARGET/etc/default/puppetmaster.dpkg-dist" "$TARGET/etc/default/puppetmaster"
 echo '*.'`dnsdomainname` >"$TARGET/etc/puppet/autosign.conf"
+echo 'certname = puppet' >>"$TARGET/etc/puppet/puppet.conf"
 
 DOMAIN=`dnsdomainname`
 
