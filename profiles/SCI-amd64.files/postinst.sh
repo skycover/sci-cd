@@ -303,10 +303,9 @@ NODE2_IP=
 NODE2_SAN_IP=
 
 # sources for approx apt cache server on sci
-# all three together must be non empty, or nonexistent
-APT_DEBIAN="debian http://ftp.debian.org/debian"
-APT_SECURITY="security http://security.debian.org/debian-security"
-APT_VOLATILE="volatile http://volatile.debian.org/debian-volatile"
+# all two together must be non empty, or nonexistent
+APT_DEBIAN="debian http://ftp.debian.org/debian/"
+APT_SECURITY="security http://security.debian.org/"
 
 # forwarders for DNS server on sci
 # use syntax "1.2.3.4; 1.2.3.4;"
