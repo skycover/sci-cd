@@ -1,6 +1,10 @@
 #!/bin/sh
 # needed uuencode/decode (sharutils)
 #
+if [ ! -x /usr/bin/uuencode ]; then
+ echo Please install sharutils
+ exit 1
+fi
 profile="$1"
 test -z "$profile" && profile=default
 
