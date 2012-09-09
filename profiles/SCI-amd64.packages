@@ -18,6 +18,8 @@ ganeti-htools
 ganeti-instance-debootstrap
 smartmontools
 hdparm
+lm-sensors
+fio
 sysstat
 libruby
 psmisc
