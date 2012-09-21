@@ -4,7 +4,7 @@
 # Xend configuration file for ganeti
 #
 
-(dom0-min-mem 384)
+(dom0-min-mem 512)
 (enable-dom0-ballooning no)
 (total_available_memory 0) 
 #(dom0-cpus 1)

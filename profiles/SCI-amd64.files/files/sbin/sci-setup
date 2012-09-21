@@ -91,7 +91,7 @@ echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
 fi
-gnt-cluster init $SECONDARY_IP $CLUSTER_NAME
+gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm $SECONDARY_IP $CLUSTER_NAME
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
@@ -132,10 +132,10 @@ fi
 
 echo Creating service machine $SERVICE_NAME
 if [ -n "$NODE2_NAME" ]; then
-  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=256m -n $NODE1_NAME:$NODE2_NAME $SERVICE_NAME
+  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m -n $NODE1_NAME:$NODE2_NAME $SERVICE_NAME
 else
   echo "WARNING! Creating the service instance without fallback support. This is strongly not recommended for production use!"
-  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=256m -n $NODE1_NAME $SERVICE_NAME
+  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m -n $NODE1_NAME $SERVICE_NAME
 fi
 
 ;;

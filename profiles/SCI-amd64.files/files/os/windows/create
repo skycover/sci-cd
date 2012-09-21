@@ -17,49 +17,4 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
-set -e
-
-. common.sh
-
-if [ "$GENERATE_CACHE" = "yes" -a ! -d "$CACHE_DIR" ]; then
-  mkdir -p "$CACHE_DIR"
-fi
-
-DPKG_ARCH=${ARCH:-`dpkg --print-architecture`}
-CACHE_FILE="$CACHE_DIR/cache-${SUITE}-${DPKG_ARCH}.tar"
-
-# If the target device is not a real block device we'll first losetup it.
-# This is needed for file disks.
-if [ ! -b $blockdev ]; then
-  ORIGINAL_BLOCKDEV=$blockdev
-  blockdev=$(losetup -sf $blockdev)
-  CLEANUP+=("losetup -d $blockdev")
-fi
-
-if [ "$PARTITION_STYLE" = "none" ]; then
-  filesystem_dev=$blockdev
-elif [ "$PARTITION_STYLE" = "msdos" ]; then
-  # Create one big partition, and make it bootable
-  format_disk0 $blockdev
-  filesystem_dev=$(map_disk0 $blockdev)
-  CLEANUP+=("unmap_disk0 $blockdev")
-else
-  echo "Unknown partition style $PARTITION_STYLE"
-  exit 1
-fi
-
-RUN_PARTS=`which run-parts`
-
-if [ -n "$RUN_PARTS" -a -n "$CUSTOMIZE_DIR" -a -d "$CUSTOMIZE_DIR" ]; then
-  TARGET=$TMPDIR
-  BLOCKDEV=$blockdev
-  FSYSDEV=$filesystem_dev
-  export TARGET SUITE ARCH PARTITION_STYLE EXTRA_PKGS BLOCKDEV FSYSDEV
-  $RUN_PARTS $CUSTOMIZE_DIR
-fi
-
-# execute cleanups
-cleanup
-trap - EXIT
-
 exit 0

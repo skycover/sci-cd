@@ -22,6 +22,7 @@ else # prepare test environment
  rm -rf target
  cp -a target-orig target
  target=target
+ mkdir -p $target/etc/xen $target/usr/sbin $target/usr/share/ganeti $target/usr/lib/xen
 fi
 
 cp -a real/* .
@@ -42,14 +43,14 @@ do
 done
 
 ## Setting up default grub entry - 'Debian GNU/Linux, with Linux 2.6.*-xen-amd64 and XEN 4.0-*'
-## Adding hypervisor option dom0_mem=384M
+## Adding hypervisor option dom0_mem=512M
 
 grub_file=$target/etc/default/grub
 grub_entry=`grep "menuentry 'Debian GNU/Linux, with Linux 2\.6\..*-xen-.* and XEN 4.0-[0-9a-z]*'" $target/boot/grub/grub.cfg|tail -1|cut -d"'" -f2`
 if [ -f $grub_file -a -n "$grub_entry" ]; then
  echo Configuring GRUB for "$grub_entry"
  ./strreplace.sh $grub_file "^GRUB_DEFAULT" "GRUB_DEFAULT='$grub_entry'"
- ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=384M"'
+ ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=512M"'
  # XXX there is no setting separately for xenkopt
  # XXX with nosmp md raid is not loading with hypervisor menuentry
  #echo 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nosmp"' >>$grub_file
@@ -70,15 +71,15 @@ if [ -n "$hostname" ]; then
 ipaddr=`grep $hostname $target/etc/hosts|awk '{print $1}'`
 hostfqdn=`grep $hostname $target/etc/hosts|awk '{print $2}'`
 domain=`grep $hostname $target/etc/hosts|awk '{sub("^[^.]*\.","",$2); print $2}'`
-# XXX f***ng backslash!
-reloc_domain=`awk -v d="$domain" 'BEGIN{gsub("\.","\\.",d);gsub("\.","\\.",d);gsub("\.","\\.",d);print d; exit}'`
+reloc_domain=`awk -v d="$domain" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
 if [ -n "$domain" -a -n "$ipaddr" ]; then
  echo Configuring host/domainname stuff for $ipaddr $fqdn
  if [ "$hostname" = "$hostfqdn" ]; then
   echo Hostname configuration already ok
  else
   echo $hostfqdn >$target/etc/hostname
-#  ./strreplace.sh xend-config.sxp "^\(xend-relocation-hosts-allow" "(xend-relocation-hosts-allow '^localhost$ ^gnt[0-9]+\\\\\\.$reloc_domain\$'"
+  ./strreplace.sh xend-config.sxp "^\(xend-relocation-hosts-allow" "(xend-relocation-hosts-allow '^localhost$ ^gnt[0-9]+\\\\\\\\.$reloc_domain\$')"
+  mkdir -p $target/etc/xen
   cp xend-config.sxp $target/etc/xen
  fi
 else
@@ -129,9 +130,18 @@ cat <<EOF >>interfaces
         bridge_fd 0
 EOF
  
-## Add example of additional VLAN interface w/o assigned IP
+## Add example of additional interfaces
 
 cat <<EOF >>interfaces
+
+# The example of dhcp-configured LAN interface
+# on the second ethernet card
+#
+#auto xen-lan
+#iface xen-lan inet dhcp
+#        bridge_ports eth1
+#        bridge_stp off
+#        bridge_fd 0
 
 # The example of addidtional VLAN interface with bridge
 # w/o assigning node any IP address
@@ -233,6 +243,15 @@ echo "options bnx2x disable_tpa=1" >$target/etc/modprobe.d/sci.conf
 # we'll assume only one xen kernel at the moment of the installation
 ln -s $target/boot/vmlinuz-2.6.*-xen-amd64 $target/boot/vmlinuz-2.6-xenU
 ln -s $target/boot/initrd.img-2.6.*-xen-amd64 $target/boot/initrd.img-2.6-xenU
+
+## Set up symlink /usr/lib/xen for quemu-dm (workaround)
+ln -s $target/usr/lib/xen-4.0 $target/usr/lib/xen
+
+## Set vnc master password if provided in postinst.conf
+if [ -n "$vnc_cluster_password" ]; then
+	echo "$vnc_cluster_password" >$target/etc/ganeti/vnc-cluster-password
+	chmod 600 $target/etc/ganeti/vnc-cluster-password
+fi
 
 if [ ! -f /proc/mounts ]; then
 	echo Warning: /proc is not mounted. Trying to fix.
