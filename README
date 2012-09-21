@@ -1,17 +1,18 @@
 SkyCover Infrastructure installation CD-ROM
 
-https://www.hostedredmine.com/projects/sci-cd/
+https://redmine.skycover.ru/projects/sci-cd/
 
 This is the Debian/GNU Linux custom CD-ROM, which helps to
 
 * Install Ganeti cluster with Xen and DRBD (http://code.google.com/p/ganeti/)
-* Tune up some Xen Linux system performance parameters
-* Set up virtual instance with Puppet, BIND9 and Approx
+* Tune (automatically) over 25 Xen Linux system parameters
+* Set up virtual instance with Puppet master, BIND9 and Approx
+* Run Linux and Windows virtual machines
 
 Includes:
 
 * XEN-hypervisor 4.0 amd64
-* Dom0 i686
+* Dom0 amd64
 * drbd
 * vlan
 * ganeti

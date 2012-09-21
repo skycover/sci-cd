@@ -17,29 +17,30 @@ git clone http://github.com/dmi/sci-cd.git
 
 4. Adjust the environment
 
-4.1. Adjust profiles/SCI-i686.conf
+4.1. Adjust profiles/SCI-amd64.conf
 
 You may need to change debian_mirror and security_mirror settings if
 you are using another mirrors
 
-4.2. Adjust profiles/SCI-i686.downloads
+4.2. Adjust profiles/SCI-amd64.downloads
 
 You can add your own packages here to make more functional distro on
 the CD.  It is recomended that you should first try the default list
 an then rebuild with your extention.
 
-4.3. Create profiles/SCI-i686.files/postinst.conf
+4.3. Create profiles/SCI-amd64.files/postinst.conf
 
 Optional.
 Tunable parameters:
 
 vlan_no - if set, the control network will be placed in this vlan
 using 821.q tagging.
+vnc_cluster_password - if set, the ganeti will use it
 
 5. Build ISO image
 
 cd sci-cd
-./build-sh SCI-i686
+./build-sh SCI-amd64
 
 6. Burn ISO image
 
