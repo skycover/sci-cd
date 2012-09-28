@@ -107,7 +107,8 @@ iface eth$i inet static
 	broadcast `eval echo "\\$NIC_${i}_BROADCAST"`
 EOF
 
-      if [ "$i" = "0" ]; then
+      g=`eval echo "\\$NIC_${i}_GATEWAY"`
+      if [ "$i" = "0" -a -n "$g" ]; then
          cat >> $TARGET/etc/network/interfaces <<EOF
 	gateway `eval echo "\\$NIC_${i}_GATEWAY"`
 EOF
