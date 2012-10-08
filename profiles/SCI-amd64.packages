@@ -26,3 +26,7 @@ psmisc
 git
 ntfsprogs
 mbr
+patch
+sysfsutils
+sg3-utils
+lvm2
