@@ -2,6 +2,7 @@ linux-image-xen-amd64
 firmware-qlogic
 firmware-bnx2
 firmware-bnx2x
+firmware-realtek
 libusbip-dev
 libusbip0
 usbip-source
