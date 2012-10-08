@@ -98,8 +98,12 @@ EOF
 }
 
 save_part_disk0() {
+  # Save bootloader at whole
+  dd if="$1" bs=512 count=63
+
   # Save partition table as the sfdisk's ouput padded with zeroes
   # to 1024b. It will go tho the start of the saving image.
+  # XXX not used actually
   tmp=`mktemp --tmpdir=/tmp sfdisk-exp.XXXXXX`
   if [ -z "$tmp" ]; then
     echo "Unable to create temp file"
@@ -115,11 +119,16 @@ restore_part_disk0() {
   # Restore partition table from the first 1024b of the image.
   # If the target disk will be bigger it will be in the customer's
   # responsibility.
+  
+  # Restore bootloader at whole
+  dd of="$1" bs=512 count=63
   # Some versions of sfdisk need manual specification of 
   # head/sectors for devices such as drbd which don't 
   # report geometry
-  dd bs=1024 count=1|tr -d '\000'|sfdisk -H 255 -S 63 --Linux --DOS "$1"
-  install-mbr "$1"
+  # XXX it is only a stub to pass sfdisk data
+  dd bs=1024 count=1 >/dev/null
+  #dd bs=1024 count=1|tr -d '\000'|sfdisk -H 255 -S 63 --Linux --DOS "$1"
+  #install-mbr "$1"
 }
 
 map_disk0() {
