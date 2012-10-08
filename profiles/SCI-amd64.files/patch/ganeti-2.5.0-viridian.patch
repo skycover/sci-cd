@@ -1,0 +1,47 @@
+--- lib/constants.py.org	2011-10-27 16:27:32.000000000 +0200
++++ lib/constants.py	2011-10-28 14:59:07.000000000 +0200
+@@ -699,6 +699,7 @@
+ HV_MEM_PATH = "mem_path"
+ HV_BLOCKDEV_PREFIX = "blockdev_prefix"
+ HV_REBOOT_BEHAVIOR = "reboot_behavior"
++HV_VIRIDIAN = "viridian"
+ 
+ HVS_PARAMETER_TYPES = {
+   HV_BOOT_ORDER: VTYPE_STRING,
+@@ -744,6 +745,7 @@
+   HV_MEM_PATH: VTYPE_STRING,
+   HV_BLOCKDEV_PREFIX: VTYPE_STRING,
+   HV_REBOOT_BEHAVIOR: VTYPE_STRING,
++  HV_VIRIDIAN: VTYPE_INT,
+   }
+ 
+ HVS_PARAMETERS = frozenset(HVS_PARAMETER_TYPES.keys())
+@@ -1280,6 +1282,7 @@
+     HV_USE_LOCALTIME: False,
+     HV_BLOCKDEV_PREFIX: "hd",
+     HV_REBOOT_BEHAVIOR: INSTANCE_REBOOT_ALLOWED,
++    HV_VIRIDIAN: '1',
+     },
+   HT_KVM: {
+     HV_KERNEL_PATH: "/boot/vmlinuz-2.6-kvmU",
+--- lib/hypervisor/hv_xen.py.org	2011-10-27 16:27:32.000000000 +0200
++++ lib/hypervisor/hv_xen.py	2011-10-28 15:10:13.000000000 +0200
+@@ -579,6 +579,7 @@
+     constants.HV_USE_LOCALTIME: hv_base.NO_CHECK,
+     # TODO: Add a check for the blockdev prefix (matching [a-z:] or similar).
+     constants.HV_BLOCKDEV_PREFIX: hv_base.NO_CHECK,
++    constants.HV_VIRIDIAN: hv_base.NO_CHECK,
+     constants.HV_REBOOT_BEHAVIOR:
+       hv_base.ParamInSet(True, constants.REBOOT_BEHAVIORS)
+     }
+@@ -601,6 +602,10 @@
+     config.write("memory = %d\n" % instance.beparams[constants.BE_MEMORY])
+     config.write("vcpus = %d\n" % instance.beparams[constants.BE_VCPUS])
+     config.write("name = '%s'\n" % instance.name)
++
++    if hvp[constants.HV_VIRIDIAN]:
++       config.write("viridian = '%s'\n" % hvp[constants.HV_VIRIDIAN])
++
+     if hvp[constants.HV_PAE]:
+       config.write("pae = 1\n")
+     else:
