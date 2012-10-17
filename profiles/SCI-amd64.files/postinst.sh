@@ -68,7 +68,7 @@ fi
 ./strreplace.sh $target/etc/rsyslog.conf "^kern\.\*[\t ]+-\/var\/log\/kern.log" 'kern.*\t\t\t\t/var/log/kern.log'
 
 ## Set hostname to fqdn
-## Set xend-config.sxp: xend-relocation-hosts-allow to allow relocation from local domain (XXX broken)
+## Set xend-config.sxp: xend-relocation-hosts-allow to allow relocation from local domain
 
 hostname=`head -1 $target/etc/hostname`
 if [ -n "$hostname" ]; then
