@@ -6,6 +6,9 @@ d-i	debian-installer/country	string	US
 d-i	localechooser/shortlist	select	US
 d-i	debian-installer/locale	select	en_US.UTF-8
 
+# set kernel version
+d-i base-installer/kernel/image string linux-image-2.6.32-5-xen-amd64
+
 d-i		clock-setup/utc boolean true
 clock-setup	clock-setup/ntp	boolean	false
 
@@ -26,7 +29,7 @@ d-i	console-cyrillic/switch	select	No temporary switch
 # XXX grub fails the first install, and then get installed ok. don't know, how to skip
 #d-i grub-installer/skip boolean true
 #d-i lilo-installer/skip boolean true
-#d-i	grub-installer/only_debian boolean true
+d-i	grub-installer/only_debian boolean true
 #d-i	grub-installer/with_other_os boolean true
 
 passwd   passwd/make-user    boolean false
@@ -34,6 +37,7 @@ passwd   passwd/make-user    boolean false
 d-i netcfg/choose_interface select auto
 d-i netcfg/disable_dhcp boolean true
 d-i netcfg/wireless_wep string 
+
 
 #base-config	apt-setup/uri_type  select cdrom
 #base-config	apt-setup/cd/another  boolean false
