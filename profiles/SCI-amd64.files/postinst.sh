@@ -137,8 +137,8 @@ cat <<EOF >>interfaces
         bridge_ports $xenif
         bridge_stp off
         bridge_fd 0
-	up ifconfig $xenif mtu 9000
-	up ifconfig xen-br0 mtu 9000
+#	up ifconfig $xenif mtu 9000
+#	up ifconfig xen-br0 mtu 9000
 EOF
  
 ## Add example of additional interfaces
