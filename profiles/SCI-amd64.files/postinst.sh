@@ -92,8 +92,8 @@ fi
 fi
 
 ## Assign supersede parameters for node's dhcp
-dns=`grep nameserver $target/etc/resolv.conf|awk '{print $2; exit}'`
-./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\nsupersede domain-name-servers $dns"
+dns=`grep nameserver $target/etc/resolv.conf|awk '{print $2; exit}'\;`
+./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\nsupersede domain-name-servers $dns\;"
 
 ## Set default interface to be bridged, optionally with vlan (see postinst.conf)
 ## Set mtu 9000 on the default interface
