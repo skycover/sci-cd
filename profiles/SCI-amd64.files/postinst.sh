@@ -92,7 +92,7 @@ fi
 
 ## Assign supersede parameters for node's dhcp
 dns=`grep nameserver $target/etc/resolv.conf|awk '{print $2; exit}'\;`
-./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\nsupersede domain-name-servers $dns\;"
+./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\;\nsupersede domain-name-servers $dns\;"
 
 ## Set default interface to be bridged, optionally with vlan (see postinst.conf)
 ## Set mtu 9000 on the default interface
@@ -431,6 +431,13 @@ NODE1_SAN_IP=
 NODE2_NAME=
 NODE2_IP=
 NODE2_SAN_IP=
+
+#master netdev name
+MASTER_NETDEV=xen-br0
+LINK_NETDEV=xen-br0
+
+#reserved volumes - what lvm used by nodes system not by cluster(comma separated)
+RESERVED_VOLS="xenvg/system-.*"
 
 # sources for approx apt cache server on sci
 # all two together must be non empty, or nonexistent
