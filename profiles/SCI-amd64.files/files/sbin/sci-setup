@@ -91,11 +91,11 @@ echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
 fi
-gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm $SECONDARY_IP $CLUSTER_NAME
+gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LINK_NETDEV --master-netdev $MASTER_NETDEV $SECONDARY_IP $CLUSTER_NAME
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
-gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.0/bin/pygrub,use_bootloader=True,bootloader_args='',root_path=/dev/xvda1 --reserved-lvs='xenvg/system-.*'
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.0/bin/pygrub,use_bootloader=True,bootloader_args='',root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 if [ -n "$NODE2_IP" ]; then
