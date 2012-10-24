@@ -47,13 +47,12 @@ do
 done
 
 ## Setting up default grub entry - 'Debian GNU/Linux, with Linux 2.6.*-xen-amd64 and XEN 4.0-*'
+dpkg-divert --divert /etc/grub.d/08_linux_xen --rename /etc/grub.d/20_linux_xen
+update-grub
 ## Adding hypervisor option dom0_mem=512M
-
 grub_file=$target/etc/default/grub
-grub_entry=`grep "menuentry 'Debian GNU/Linux, with Linux 2\.6\..*-xen-.* and XEN 4.0-[0-9a-z]*'" $target/boot/grub/grub.cfg|tail -1|cut -d"'" -f2`
-if [ -f $grub_file -a -n "$grub_entry" ]; then
- echo Configuring GRUB for "$grub_entry"
- ./strreplace.sh $grub_file "^GRUB_DEFAULT" "GRUB_DEFAULT='$grub_entry'"
+if [ -f $grub_file ]; then
+ echo Configuring GRUB 
  ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=512M"'
  # XXX there is no setting separately for xenkopt
  # XXX with nosmp md raid is not loading with hypervisor menuentry
