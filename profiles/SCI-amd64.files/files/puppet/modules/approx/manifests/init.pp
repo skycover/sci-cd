@@ -1,5 +1,4 @@
 class approx {
-	$approxTemplates = "/etc/puppet/modules/approx/templates"
 
 	package { 'approx': ensure => installed, allowcdrom => true } 
 
@@ -7,7 +6,7 @@ class approx {
 		owner => "root",
 		group => "root",
 		mode => 0644,
-		content => template("$approxTemplates/approx.conf.erb"),
+		content => template("approx/approx.conf.erb"),
 		require => Package['approx'],
 	}
 }
@@ -36,7 +35,7 @@ class approx_local {
 		owner => "root",
 		group => "root",
 		mode => 0700,
-		content => template("$approxModule/templates/sci-key-input.erb"),
+		content => template("approx/sci-key-input.erb"),
 		require => File["$GPGDir"],
 	}
 	file { "$GPGDir/sci.pub": }
@@ -82,7 +81,7 @@ class sources_list_local {
 	}
 	file { "/etc/apt/sources.list":
 		owner => "root", group => "root", mode => 0644,
-		content => template("/etc/puppet/modules/approx/templates/sources.list.erb"),
+		content => template("approx/sources.list.erb"),
 	}
 	exec{ apt-get-update:
 		command => '/usr/bin/apt-get update',
