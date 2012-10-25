@@ -1,0 +1,22 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+include "/etc/bind/keys";
+
+zone "<%= domain %>" in {
+ type master;
+ file "/etc/bind/master/<%= domain %>";
+ allow-query    { any; };
+ allow-update{ key DHCP_UPDATE; };
+};
+
+zone 168.192.in-addr.arpa in {
+ type master;
+ file "/etc/bind/master/in-addr";
+ allow-query    { any; };
+ allow-update{ key DHCP_UPDATE; };
+};
