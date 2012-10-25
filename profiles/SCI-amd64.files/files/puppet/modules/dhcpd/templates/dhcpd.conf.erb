@@ -1,0 +1,35 @@
+ddns-update-style interim;
+ddns-updates on;
+allow-unknown-clients;
+autoritative;
+ddns-domainname "<%= domain %>";
+update-static-leases on;
+allow client-updates;
+
+key DHCP_UPDATE {
+	algorithm HMAC-MD5;
+	secret <%= sci_dnskey %>
+};
+
+subnet <%= sci_subnet %>.0 netmask 255.255.255.0 {
+	authoritative;
+	ddns-updates on;
+	range <%= sci_subnet %>.100 <%= sci_subnet %>.200;
+	option routers <%= sci_subnet %>.1;
+	option domain-name-servers <%= ipaddress %>;
+	option domain-name "<%= domain %>";
+	default-lease-time 604800;
+	max-lease-time 2592000;
+	}
+
+
+zone <%= domain %>. {
+	primary 127.0.0.1;
+	key DHCP_UPDATE;
+}
+
+zone 168.192.in-addr.arpa. {
+	primary 127.0.0.1;
+	key DHCP_UPDATE;
+}
+
