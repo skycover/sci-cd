@@ -119,11 +119,11 @@ gnt-cluster verify
 
 gnt-node list
 
-echo If all is ok, proceed with "$0 service"
+echo If all is ok, proceed with "$0 sci"
 
 ;;
 
-service)
+sci|service)
 
 if [ -z "$SERVICE_NAME" -o -z "$SERVICE_IP" ]; then
  echo You should carefully fullfill parameters in /etc/sci/sci.conf
@@ -148,7 +148,7 @@ cat /etc/sci/sci.conf
 
 *)
 
-echo "Usage: $0 {cluster|service|show}"
+echo "Usage: $0 {cluster|sci|show}"
 
 ;;
 
