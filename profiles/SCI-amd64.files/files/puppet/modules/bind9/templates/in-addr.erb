@@ -1,0 +1,19 @@
+$TTL 1h
+
+168.192.in-addr.arpa. IN SOA sci.<%= domain %>. postmaster.<%= domain %>. (
+ 0000000001 ; Serial
+ 4h         ; Refresh
+ 2h         ; Retry
+ 500h       ; Expire
+ 3h       ) ; Negative TTL
+
+@ IN NS sci.<%= domain %>.
+
+<%= sci_cluster_revip %>.in-addr.arpa. IN PTR <%= sci_cluster_name %>.<%= domain %>
+<%= sci_node1_revip %>.in-addr.arpa.  IN PTR <%= sci_node1_name %>.<%= domain %>
+<%= sci_sci_revip %>.in-addr.arpa.  IN PTR <%= hostname %>.<%= domain %>
+<% if has_variable?("sci_node2_name") -%>
+<%= sci_node2_revip %>.in-addr.arpa.  IN PTR <%= sci_node2_name %>.<%= domain %>
+<% end -%>
+
+; here you can put any other records
