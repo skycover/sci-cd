@@ -1,0 +1,13 @@
+# This file lists locales that you wish to have built. You can find a list
+# of valid supported locales at /usr/share/i18n/SUPPORTED, and you can add
+# user defined locales to /usr/local/share/i18n/SUPPORTED. If you change
+# this file, you need to rerun locale-gen.
+#
+# ruled by puppet. resistance is futile
+#
+en_US ISO-8859-1
+en_US.UTF-8
+ru_RU.UTF-8
+ru_RU.KOI8-R
+ru_RU.CP1251
+ru_RU.ISO8859-5
