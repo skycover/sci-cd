@@ -19,7 +19,7 @@ class locale(def_locale="en_US.UTF-8") {
 
 	exec { 'regenerate-locales':
 		command => '/usr/sbin/locale-gen',
-		subscribe => File['/etc/locale.gent'],
+		subscribe => File['/etc/locale.gen'],
 		require => Package["locales"],
 		refreshonly => true,
 	}
