@@ -16,10 +16,9 @@ else {
         }
 
 
-        exec { "/bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf":
-                subscribe => File[ "/etc/dhcp/dhcpd.conf.puppet" ],
-                refreshonly => true,
+        exec { "/bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf; touch /etc/dhcp/.disable-puppet":
                 require => Package['isc-dhcp-server'],
+				creates =>  "/etc/dhcp/.disable-puppet",
         }
 
 
