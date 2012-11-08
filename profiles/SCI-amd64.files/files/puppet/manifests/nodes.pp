@@ -1,11 +1,16 @@
 node 'default' {
-	include common_profile, sources_list_local
-	class { timezone: zone => "Europe/Moscow", }
-	class { locale: def_locale => "ru_RU.UTF-8", }
+	class { sources_list_local: stage => pre0, }
+	class { common_profile: stage => pre1, }
+	class { timezone: zone => "Europe/Moscow", stage => main, }
+	class { locale: def_locale => "ru_RU.UTF-8", stage => main, }
 }
 
 node 'sci' {
-	include common_profile, bind9_sci, approx_local, sources_list_local
-	class { timezone: zone => "Europe/Moscow", }
-	class { locale: def_locale => "ru_RU.UTF-8", }
+	class { approx_local: stage => pre0, }
+	class { sources_list_local: stage => pre0, }
+	class { common_profile: stage => pre1, }
+	class { bind9_sci: stage => main, }
+	class { timezone: zone => "Europe/Moscow", stage => main, }
+	class { locale: def_locale => "ru_RU.UTF-8", stage => main, }
+	class { dhcpd: enabled => no, stage => post1, }
 }
