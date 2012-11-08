@@ -6,8 +6,8 @@
 # ruled by puppet. resistance is futile
 #
 en_US ISO-8859-1
-en_US.UTF-8
-ru_RU.UTF-8
-ru_RU.KOI8-R
-ru_RU.CP1251
-ru_RU.ISO8859-5
+en_US UTF-8
+ru_RU UTF-8
+ru_RU KOI8-R
+ru_RU CP1251
+ru_RU ISO8859-5
