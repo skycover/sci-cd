@@ -1,9 +1,16 @@
-class dhcpd(enabled=yes) {
+class dhcpd($enabled=yes) {
 if $enabled==yes {
         package {isc-dhcp-server: ensure=> installed}
 }
 else {
-        package {isc-dhcp-server: ensure=> removed}
+        exec { "/usr/bin/apt-get -q -y -o DPkg::Options::=--force-confold --force-yes install isc-dhcp-server":
+                creates => "/etc/dhcp/dhcpd.conf",
+        }
+
+        package {isc-dhcp-server:
+                ensure=> absent,
+                require => Exec [ "/usr/bin/apt-get -q -y -o DPkg::Options::=--force-confold --force-yes install isc-dhcp-server" ],
+        }
 }
 
         file { "/etc/dhcp/dhcpd.conf.puppet":
@@ -16,9 +23,9 @@ else {
         }
 
 
-        exec { "/bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf; touch /etc/dhcp/.disable-puppet":
+        exec { '/bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf; /bin/sed -i "s/changeme/$(/bin/cat /etc/bind/keys|/bin/grep secret|/usr/bin/cut -f6 -d\' \')/" /etc/dhcp/dhcpd.conf; touch /etc/dhcp/.disable-puppet':
                 require => Package['isc-dhcp-server'],
-				creates =>  "/etc/dhcp/.disable-puppet",
+                creates =>  "/etc/dhcp/.disable-puppet",
         }
 
 
