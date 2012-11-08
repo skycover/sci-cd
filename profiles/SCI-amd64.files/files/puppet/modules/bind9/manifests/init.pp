@@ -90,21 +90,24 @@ class bind9_chroot {
 	
 }
 
-class bind9_sci {
-	include bind9_chroot
+class bind9_sci inherits bind9_chroot {
 	file { "/etc/bind/named.conf.options":
 		owner => "root",
 		group => "bind",
 		mode => 0640,
 		content => template("bind9/sci/named.conf.options.erb"),
-		require => Package['bind9'],
+		require =>  [ Package['bind9'],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
 	}
 	file { "/etc/bind/named.conf.local":
 		owner => "root",
 		group => "bind",
 		mode => 0640,
 		content => template("bind9/sci/named.conf.local.erb"),
-		require => Package['bind9'],
+		require =>  [ Package['bind9'],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
 	}
 	file { "/etc/bind/master":
 		owner => "bind",
@@ -123,6 +126,7 @@ class bind9_sci {
                            ],
 	}
 	exec { "/bin/cp -a /etc/bind/master/$domain.puppet /etc/bind/master/$domain":
+		require => File["/etc/bind/master/$domain.puppet"],
 		unless	=> "/usr/bin/test -e /etc/bind/master/$domain",
 	}
 	file { "/etc/bind/master/in-addr.puppet":
@@ -135,6 +139,7 @@ class bind9_sci {
                            ],
 	}
 	exec { "/bin/cp -a /etc/bind/master/in-addr.puppet /etc/bind/master/in-addr":
+		require => File["/etc/bind/master/in-addr.puppet"],
 		unless	=> '/usr/bin/test -e /etc/bind/master/in-addr',
 	}
 	file { "/usr/local/sbin/create-dns-keys":
@@ -142,7 +147,9 @@ class bind9_sci {
 		group => "root",
 		mode => 755,
 		source => 'puppet:///modules/bind9/create-dns-keys',
-		require => Package['bind9utils'],
+		require =>  [ Package['bind9', 'bind9utils' ],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
 	}
 	# generate md5 for update auth
 	exec { "generate md5 for dns update auth":
@@ -155,6 +162,8 @@ class bind9_sci {
 				   "/etc/bind/master/$domain.puppet",
 				   "/etc/bind/master/in-addr.puppet"
 				 ],
+					Exec[ "generate md5 for dns update auth" ],
+				],
 		refreshonly => true,
 	}
 
