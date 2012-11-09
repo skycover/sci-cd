@@ -1,0 +1,36 @@
+$TTL 1h
+
+168.192.in-addr.arpa. IN SOA sci.<%= domain %>. postmaster.<%= domain %>. (
+ 0000000001 ; Serial
+ 4h         ; Refresh
+ 2h         ; Retry
+ 500h       ; Expire
+ 3h       ) ; Negative TTL
+
+@ IN NS sci.<%= domain %>.
+
+<%= sci_cluster_revip %>.in-addr.arpa. IN PTR <%= sci_cluster_name %>.<%= domain %>.
+<%= sci_node1_revip %>.in-addr.arpa.  IN PTR <%= sci_node1_name %>.<%= domain %>.
+<% if has_variable?("sci_node1_lan_revip") -%>
+<%= sci_node1_lan_revip %>.in-addr.arpa.    IN PTR <%= sci_node1_name %>-lan.<%= domain %>.
+<% end -%>
+<% if has_variable?("sci_node1_san_revip") -%>
+<%= sci_node1_san_revip %>.in-addr.arpa.  IN PTR <%= sci_node1_name %>-san.<%= domain %>.
+<% end -%>
+<%= sci_sci_revip %>.in-addr.arpa.  IN PTR <%= hostname %>.<%= domain %>.
+<% if has_variable?("sci_sci_lan_revip") -%>
+<%= sci_sci_lan_revip %>.in-addr.arpa.   IN PTR <%= hostname %>-lan.<%= domain %>.
+<% end -%>
+<% if has_variable?("sci_node2_revip") -%>
+<%= sci_node2_revip %>.in-addr.arpa.  IN PTR <%= sci_node2_name %>.<%= domain %>.
+<% end -%>
+<% if has_variable?("sci_node2_lan_revip") -%>
+<%= sci_node2_lan_revip %>.in-addr.arpa.   IN PTR <%= sci_node2_name %>-lan.<%= domain %>.
+<% end -%>
+<% if has_variable?("sci_node2_san_revip") -%>
+<%= sci_node2_san_revip %>.in-addr.arpa.   IN PTR <%= sci_node2_name %>-san.<%= domain %>.
+<% end -%>
+
+; here you can put any other records
+
+

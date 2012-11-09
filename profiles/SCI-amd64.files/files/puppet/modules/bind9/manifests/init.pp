@@ -1,7 +1,6 @@
-$bind9Templates="/etc/puppet/modules/bind9/templates"
-
 class bind9_chroot {
 	package { [ 'bind9' ]: ensure => installed, allowcdrom => true } 
+	package { [ 'bind9utils' ]: ensure => installed, allowcdrom => true } 
 	file { [
 		"/var/lib/named",
 		"/var/lib/named/dev",
@@ -91,43 +90,80 @@ class bind9_chroot {
 	
 }
 
-class bind9_sci {
-	include bind9_chroot
+class bind9_sci inherits bind9_chroot {
 	file { "/etc/bind/named.conf.options":
 		owner => "root",
 		group => "bind",
 		mode => 0640,
-		content => template("$bind9Templates/sci/named.conf.options.erb"),
-		require => Package['bind9'],
+		content => template("bind9/sci/named.conf.options.erb"),
+		require =>  [ Package['bind9'],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
 	}
 	file { "/etc/bind/named.conf.local":
 		owner => "root",
 		group => "bind",
 		mode => 0640,
-		content => template("$bind9Templates/sci/named.conf.local.erb"),
-		require => Package['bind9'],
+		content => template("bind9/sci/named.conf.local.erb"),
+		require =>  [ Package['bind9'],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
 	}
 	file { "/etc/bind/master":
-		owner => "root",
+		owner => "bind",
 		group => "root",
 		mode => 755,
 		ensure => [directory, present],
 		require => Package['bind9'],
 	}
-	file { "/etc/bind/master/$domain":
-		owner => "root",
+	file { "/etc/bind/master/$domain.puppet":
+		owner => "bind",
 		group => "bind",
 		mode => 0640,
-		content => template("$bind9Templates/sci/zone.erb"),
+		content => template("bind9/sci/zone.erb"),
 		require => [ Package['bind9'],
                              File['/etc/bind/master'],
                            ],
 	}
+	exec { "/bin/cp -a /etc/bind/master/$domain.puppet /etc/bind/master/$domain":
+		require => File["/etc/bind/master/$domain.puppet"],
+		unless	=> "/usr/bin/test -e /etc/bind/master/$domain",
+	}
+	file { "/etc/bind/master/in-addr.puppet":
+		owner => "bind",
+		group => "bind",
+		mode => 0640,
+		content => template("bind9/sci/in-addr.erb"),
+		require => [ Package['bind9'],
+                             File['/etc/bind/master'],
+                           ],
+	}
+	exec { "/bin/cp -a /etc/bind/master/in-addr.puppet /etc/bind/master/in-addr":
+		require => File["/etc/bind/master/in-addr.puppet"],
+		unless	=> '/usr/bin/test -e /etc/bind/master/in-addr',
+	}
+	file { "/usr/local/sbin/create-dns-keys":
+		owner => "root",
+		group => "root",
+		mode => 755,
+		source => 'puppet:///modules/bind9/create-dns-keys',
+		require =>  [ Package['bind9', 'bind9utils' ],
+			Exec[ "/usr/local/sbin/relocate-bind9-chroot" ],
+		],
+	}
+	# generate md5 for update auth
+	exec { "generate md5 for dns update auth":
+		command	=> '/usr/local/sbin/create-dns-keys',
+		unless	=> '/usr/bin/test -e /etc/bind/keys',
+	} 
 	exec { "/usr/sbin/rndc reload":
-		subscribe => File[ "/etc/bind/named.conf.options",
+		subscribe => [ File[ "/etc/bind/named.conf.options",
 				   "/etc/bind/named.conf.local",
-				   "/etc/bind/master/$domain"
+				   "/etc/bind/master/$domain.puppet",
+				   "/etc/bind/master/in-addr.puppet"
 				 ],
+					Exec[ "generate md5 for dns update auth" ],
+				],
 		refreshonly => true,
 	}
 
