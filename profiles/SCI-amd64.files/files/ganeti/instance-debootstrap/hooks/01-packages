@@ -36,6 +36,7 @@ if [ "$OS_VARIANT" = "sci" ]; then
  echo N|chroot "$TARGET" apt-get -y --force-yes install puppetmaster
  echo exit >"$TARGET/etc/default/openbsd-inetd"
  echo N|chroot "$TARGET" apt-get -y --force-yes install approx
+ echo N|chroot "$TARGET" apt-get -y --force-yes install ipcalc
  rm "$TARGET/etc/default/openbsd-inetd"
 fi
 
