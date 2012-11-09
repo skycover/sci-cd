@@ -24,7 +24,7 @@ end
 
 Facter.add("sci_dhcp_ipaddress") do
         setcode do
-                %x{if (ip addr show eth1 > /dev/null) then ip addr show eth1|grep inet\ |cut -f6 -d' '|cut -f1 -d'/'; else ip addr show eth0|grep inet\ |cut -f6 -d' '|cut -f1 -d'/'; fi}.chomp end
+                %x{if (ip addr show eth1 > /dev/null) then ip -4 addr show eth1|grep inet\ |cut -f6 -d' '|cut -f1 -d'/'; else ip -4 addr show eth0|grep inet\ |cut -f6 -d' '|cut -f1 -d'/'; fi}.chomp end
 end
 
 Facter.add("sci_dnskey") do
