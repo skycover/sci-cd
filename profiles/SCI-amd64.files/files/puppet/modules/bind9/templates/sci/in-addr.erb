@@ -18,6 +18,9 @@ $TTL 1h
 <%= sci_node1_san_revip %>.in-addr.arpa.  IN PTR <%= sci_node1_name %>-san.<%= domain %>.
 <% end -%>
 <%= sci_sci_revip %>.in-addr.arpa.  IN PTR <%= hostname %>.<%= domain %>.
+<% if has_variable?("sci_sci_lan_revip") -%>
+<%= sci_sci_lan_revip %>.in-addr.arpa.   IN PTR <%= hostname %>-lan.<%= domain %>.
+<% end -%>
 <% if has_variable?("sci_node2_revip") -%>
 <%= sci_node2_revip %>.in-addr.arpa.  IN PTR <%= sci_node2_name %>.<%= domain %>.
 <% end -%>

@@ -85,6 +85,16 @@ Facter.add("sci_node2_lan_revip") do
 end
 Facter.add("sci_sci_revip") do
         setcode do
-                %x{host sci|awk '{print $4}'|awk -F. '{print $4"."$3"."$2"."$1}'}.chomp
+                %x{cat /etc/hosts|grep sci|awk '{print $1}'|awk -F. '{print $4"."$3"."$2"."$1}'}.chomp
+        end
+end
+Facter.add("sci_sci_lan_ip") do
+        setcode do
+                %x{. /etc/sci/sci.conf; echo $SCI_LAN_IP}.chomp
+        end
+end
+Facter.add("sci_sci_lan_revip") do
+        setcode do
+                %x{. /etc/sci/sci.conf; if [ -n "$SCI_LAN_IP" ] ;then echo $SCI_LAN_IP|awk -F. '{print $4"."$3"."$2"."$1}';fi}.chomp
         end
 end

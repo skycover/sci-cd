@@ -19,6 +19,9 @@ sci	IN A <%= ipaddress %>
 apt	CNAME sci
 ntp	CNAME sci
 puppet	CNAME sci
+<% if has_variable?("sci_sci_lan_ip") -%>
+sci-lan	IN A <%= sci_sci_lan_ip %>
+<% end -%>
 <%= sci_cluster_name %>	IN A <%= sci_cluster_ip %>
 <%= sci_node1_name %>	IN A <%= sci_node1_ip %>
 <% if has_variable?("sci_node1_lan_ip") -%>

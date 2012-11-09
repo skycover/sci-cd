@@ -157,7 +157,7 @@ class bind9_sci inherits bind9_chroot {
 		unless	=> '/usr/bin/test -e /etc/bind/keys',
 	} 
 	exec { "/usr/sbin/rndc reload":
-		subscribe => File[ "/etc/bind/named.conf.options",
+		subscribe => [ File[ "/etc/bind/named.conf.options",
 				   "/etc/bind/named.conf.local",
 				   "/etc/bind/master/$domain.puppet",
 				   "/etc/bind/master/in-addr.puppet"
