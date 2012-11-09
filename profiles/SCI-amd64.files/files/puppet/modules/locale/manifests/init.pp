@@ -13,7 +13,7 @@ class locale(def_locale="en_US.UTF-8") {
 		owner   => root,
 		group   => root,
 		mode    => 644,
-		source  => "puppet:///modules/locale/locale.gen",
+		content => template("locale/locale.gen.erb"),
 		require => Package["locales"],
 	}
 
