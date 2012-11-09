@@ -1,10 +1,179 @@
 #!/bin/sh
 
+# usage check_ip IP
+# returns NETDEV MASK or exits with error
+check_ip(){
+  /sbin/ifconfig|awk -vip="$1" '
+/^[a-z]/{iface=$1}
+/^[ \t]*inet addr:/{
+  split($2,A,":")
+  addr=A[2]
+  if(addr == ip){
+    for(i=1; i<=NF; i++){
+      if($i ~ /^Mask:/){
+        split($i,M,":")
+        mask=M[2]
+      }
+    }
+    print iface, mask
+    ok = 1
+    exit
+  }
+}
+END{
+  if(ok)exit 0
+  exit 1
+}
+' || (cat <<EOF 1>&2
+ERROR!
+The IP address $1 is NOT UP on the node!
+Check ifconfig, /etc/network/interfaces and /etc/sci/sci.conf
+
+Aborting.
+EOF
+  exit 1)
+}
+
+# usage: check_netdev IFACE PURPOSE
+# exits with error
+check_netdev(){
+  if ! grep -q "^iface $1" /etc/network/interfaces; then
+   cat <<EOF
+ERROR!
+The interface $1 as $2 should be configured and up!
+Check /etc/network/interfaces and /etc/sci/sci.conf
+
+Aborting.
+EOF
+   exit 1
+  fi
+  if ! /sbin/ifconfig|grep -q "^$1 "; then
+   cat <<EOF
+ERROR!
+The interface $1 as $2 seems configured but NOT UP!
+Check ifconfig, /etc/network/interfaces and /etc/sci/sci.conf
+
+Aborting.
+EOF
+   exit 1
+  fi
+}
+
+# check_ip_net IP1 IP2 IP2-MASK
+# return 0 if IP1 in the same network as IP2
+check_ip_net(){
+  m1=`ipcalc -n $1 $3|awk '/^Network:/{print $2}'`
+  m2=`ipcalc -n $2 $3|awk '/^Network:/{print $2}'`
+  test "$m1" = "$m2"
+}
+
+# Create line for /etc/ganeti networks
+# Args: IP NETMASK INTERFACE
+for_networks(){
+  N_NETWORK=`ipcalc -n $1 $2|awk -F"[: /]+" '/^Network:/{print $2; exit 0}'`
+  N_NETMASK=`ipcalc -n $1 $2|awk -F"[: /]+" '/^Netmask:/{print $2; exit 0}'`
+  N_BROADCAST=`ipcalc -n $1 $2|awk -F"[: /]+" '/^Broadcast:/{print $2; exit 0}'`
+  if [ -n "$3" ]; then
+    N_GATEWAY=`ip route |grep "^default via .* dev $3"|cut -d' ' -f 3`
+  else
+    N_GATEWAY=""
+  fi
+  echo $N_NETWORK $N_NETMASK $N_BROADCAST $N_GATEWAY
+}
+
 . /etc/sci/sci.conf
 
 DOMAIN_NAME=`grep '^search' /etc/resolv.conf|head -1|awk '{print $2}'`
-SERVICE_NAME="sci"
-SERVICE_IP=`grep '^nameserver' /etc/resolv.conf|head -1|awk '{print $2}'`
+SCI_NAME="sci"
+SCI_IP=`grep '^nameserver' /etc/resolv.conf|head -1|awk '{print $2}'`
+
+#### Perform some AI
+
+# Check NODE1_IP against ifconfig
+# Get NODE1_NETDEV NODE1_MASK
+# Check NODE1_NETDEV against interfaces
+
+# Check NODE1_LAN_IP against ifconfig
+# Get NODE1_LAN_NETDEV NODE1_LAN_MASK
+# Check NODE1_LAN_NETDEV against interfaces
+
+# Check CLUSTER_IP against NODE1_LAN_x and NODE1_INT_x, try to find CLU_NETDEV, or set to MASTER_NETDEV
+# Check autodetected CLU_NETDEV against MASTER_NETDEV override, abort if not match
+# Set MASTER_NETDEV to match CLU_NETDEV
+# Check LAN_NETDEV against NODE1_LAN_NETDEV and NODE1_NETDEV
+# Set LAN_NETDEV or pass
+
+if [ -z "$CLUSTER_IP" ]; then
+  cat <<EOF
+ERROR!
+The CLUSTER_IP must be set!
+Check /etc/sci/sci.conf
+
+Aborting.
+EOF
+  exit 1
+fi
+
+read NODE1_NETDEV NODE1_MASK <<EOF
+`check_ip $NODE1_IP`
+EOF
+check_netdev $NODE1_NETDEV NODE1_NETDEV
+if check_ip_net $CLUSTER_IP $NODE1_IP $NODE1_MASK; then
+  CLU_NETDEV=$NODE1_NETDEV
+  CLU_NETMASK=$NODE1_MASK
+fi
+
+if [ -n "$NODE1_LAN_IP" ]; then
+  read NODE1_LAN_NETDEV NODE1_LAN_MASK <<EOF
+`check_ip $NODE1_LAN_IP`
+EOF
+  check_netdev $NODE1_LAN_NETDEV NODE1_LAN_NETDEV
+  if check_ip_net $CLUSTER_IP $NODE1_LAN_IP $NODE1_LAN_MASK; then
+    CLU_NETDEV=$NODE1_LAN_NETDEV
+    CLU_NETMASK=$NODE1_LAN_MASK
+  fi
+fi
+
+test -n "$MASTER_NETDEV" && check_netdev $MASTER_NETDEV MASTER_NETDEV
+
+if [ -n "$CLU_NETDEV" ]; then
+  if [ -n "$MASTER_NETDEV" ]; then
+    if [ "$CLU_NETDEV" != "$MASTER_NETDEV" ]; then
+      cat <<EOF
+ERROR!
+The MASTER_NETDEV=$MASTER_NETDEV doesn't match autodetected device $CLU_NETDEV!
+Check /etc/sci/sci.conf
+
+Aborting.
+EOF
+      exit 1
+    fi
+  else
+    MASTER_NETDEV=$CLU_NETDEV
+    MASTER_NETMASK=$CLU_NETMASK
+  fi
+elif [ -z "$MASTER_NETDEV" ]; then
+  cat <<EOF
+ERROR!
+Unable to figure out the MASTER_NETDEV!
+The CLUSTER_IP=$CLUSTER_IP is not a part of configured NODE1 networks.
+And the MASTER_NETDEV override not set.
+Check /etc/sci/sci.conf
+
+Aborting.
+EOF
+  exit 1
+fi
+
+# Here MASTER_NETDEV is always detected
+MASTER_NETMASK=${MASTER_NETMASK:-"255.255.255.0"}
+
+LAN_NETDEV=${LAN_NETDEV:-$NODE1_LAN_NETDEV}
+LAN_NETDEV=${LAN_NETDEV:-$MASTER_NETDEV}
+
+# Here LAN_NETDEV is always detected
+
+#### End AI
 
 case $1 in
 
@@ -14,23 +183,41 @@ cat <<EOF
 Parameters detected:
 Domain name: $DOMAIN_NAME
 
+Master network interface: $MASTER_NETDEV
+
 Cluster name: $CLUSTER_NAME
 Cluster IP: $CLUSTER_IP
 
-Service instance name: $SERVICE_NAME
-Service instance IP: $SERVICE_IP
+Service instance name: $SCI_NAME
+Service instance IP: $SCI_IP
+EOF
+test -n "$SCI_LAN_IP" && echo Service instance LAN IP: $SCI_LAN_IP
+cat <<EOF
 
 Node 1 name: $NODE1_NAME
 Node 1 IP: $NODE1_IP
-
 EOF
+test -n "$NODE1_SAN_IP" && echo Node 1 SAN IP: $NODE1_SAN_IP
+test -n "$NODE1_LAN_IP" && echo Node 1 LAN IP: $NODE1_LAN_IP
+test -n "$LAN_NETDEDV" && echo LAN network interface: $LAN_NETDEV
+echo ""
+
 if [ -n "$NODE2_IP" ]; then
  if [ -n "$NODE1_SAN_IP" -a -z "$NODE2_SAN_IP" ]; then
 cat <<EOF
 ERROR!
 NODE1_SAN_IP is specified but NODE2_SAN_IP is empty.
 Both values must be set or unset.
-The continue will cause error. Aborting.
+This will cause error. Aborting.
+EOF
+  exit 1
+ fi
+ if [ -n "$NODE1_LAN_IP" -a -z "$NODE2_LAN_IP" ]; then
+cat <<EOF
+ERROR!
+NODE1_LAN_IP is specified but NODE2_LAN_IP is empty.
+Both values must be set or unset.
+This will cause error. Aborting.
 EOF
   exit 1
  fi
@@ -38,6 +225,8 @@ EOF
 Node 2 name: $NODE2_NAME
 Node 2 IP: $NODE2_IP
 EOF
+ test -n "$NODE2_SAN_IP" && echo Node 2 SAN IP: $NODE2_SAN_IP
+ test -n "$NODE2_LAN_IP" && echo Node 2 LAN IP: $NODE2_LAN_IP
 else
  cat <<EOF
 WARNING!
@@ -73,25 +262,30 @@ ff02::2 ip6-allrouters
 # cluster
 $CLUSTER_IP	$CLUSTER_NAME.$DOMAIN_NAME $CLUSTER_NAME
 # service machine
-$SERVICE_IP	$SERVICE_NAME.$DOMAIN_NAME $SERVICE_NAME puppet.$DOMAIN_NAME puppet apt.$DOMAIN_NAME apt
+$SCI_IP	$SCI_NAME.$DOMAIN_NAME $SCI_NAME puppet.$DOMAIN_NAME puppet apt.$DOMAIN_NAME apt
 # first nodes
 $NODE1_IP	$NODE1_NAME.$DOMAIN_NAME $NODE1_NAME
 EOF
 
 echo Fulfilling default /etc/ganeti/networks
-# XXX should iterate thru interfaces
-NIC0_NETWORK=`awk '/^[ \t]*network/{print $2; exit 0}' /etc/network/interfaces`
-NIC0_NETMASK=`awk '/^[ \t]*netmask/{print $2; exit 0}' /etc/network/interfaces`
-NIC0_BROADCAST=`awk '/^[ \t]*broadcast/{print $2; exit 0}' /etc/network/interfaces`
-NIC0_GATEWAY=`awk '/^[ \t]*gateway/{print $2; exit 0}' /etc/network/interfaces`
 
-echo $NIC0_NETWORK $NIC0_NETMASK $NIC0_BROADCAST $NIC0_GATEWAY >>/etc/ganeti/networks
+for_networks $NODE1_IP $NODE1_MASK $NODE1_NETDEV >/etc/ganeti/networks
+if [ -n "$NODE1_SAN_IP" ]; then
+  for_networks $NODE1_SAN_IP $NODE1_SAN_MASK >>/etc/ganeti/networks
+fi
+if [ -n "$NODE1_LAN_IP" ]; then
+  for_networks $NODE1_LAN_IP $NODE1_LAN_MASK $NODE1_LAN_NETDEV >>/etc/ganeti/networks
+elif [ -n "$SCI_LAN_IP" ]; then
+  fnx=`for_networks $SCI_LAN_IP ${SCI_LAN_NETMASK:-255.255.255.0}`
+  echo $fnx $SCI_LAN_GATEWAY >>/etc/ganeti/networks 
+fi
 
 echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
 fi
-gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LINK_NETDEV --master-netdev $MASTER_NETDEV $SECONDARY_IP $CLUSTER_NAME
+gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LAN_NETDEV --master-netdev $MASTER_NETDEV $SECONDARY_IP $CLUSTER_NAME
+# XXX in ganeti 2.6 should be added: --master-netmask $MASTER_NETMASK
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
@@ -105,9 +299,7 @@ if [ -n "$NODE2_IP" ]; then
  fi
  echo "$NODE2_IP       $NODE2_NAME.$DOMAIN_NAME $NODE2_NAME" >>/etc/hosts
  gnt-node add $SECONDARY_IP $NODE2_NAME
- # XXX check - should be copied by a add-node hook
- #echo Copying /etc/ganeti/networks to $NODE2_NAME:
- #gnt-cluster copyfile /etc/ganeti/networks
+ # NOTE: /etc/ganeti/networks is copied by a node-add-post hook to any new node
 else
  echo "WARNING! Creating SkyCover Infrastructure with on only one node. This is strongly not recommended for production use!"
 fi
@@ -125,18 +317,52 @@ echo If all is ok, proceed with "$0 sci"
 
 sci|service)
 
-if [ -z "$SERVICE_NAME" -o -z "$SERVICE_IP" ]; then
- echo You should carefully fullfill parameters in /etc/sci/sci.conf
- echo Aborted.
+if [ -z "$SCI_NAME" -o -z "$SCI_IP" ]; then
+ cat <<EOF
+SCI_NAME and/or SCI_IP not defined.
+You should carefully fullfill parameters in /etc/sci/sci.conf
+
+Aborting.
+EOF
  exit 1
 fi
 
-echo Creating service machine $SERVICE_NAME
+MASTER_NETDEV=`gnt-cluster info|awk '/- master netdev:/{print $NF; exit 0}'`
+LAN_NETDEV=`gnt-cluster info|awk '/^Default nic parameters:/{s=1}/ *link: /{if(s){print $NF; exit 0}}'`
+if [ "$NODE1_NETDEV" != "$LAN_NETDEV" ]; then
+  LANIF="--net=1:link=$LAN_NETDEV"
+  if [ -n "$SCI_LAN_IP" ]; then
+    if [ -n "$NODE1_LAN_IP" ]; then
+      if ! check_ip_net $SCI_LAN_IP $NODE1_LAN_IP $NODE1_LAN_MASK; then
+        cat <<EOF
+ERROR!
+NODE1_LAN_IP and SCI_LAN_IP are in different networks.
+Check ifconfig, /etc/network/interfaces and /etc/sci/sci.conf
+
+Aborting.
+EOF
+        exit 1
+      fi
+    fi
+    LANIF="$LANIF,ip=$SCI_LAN_IP"
+  fi
+fi
+
+check_netdev $MASTER_NETDEV MASTER_NETDEV
+check_netdev $LAN_NETDEV LAN_NETDEV
+
+cat <<EOF
+Creating service machine $SCI_NAME
+IP: $SCI_IP on $NODE1_NETDEV
+EOF
+test -n "$LANIF" && echo Second network device: $LAN_NETDEV
+test -n "$SCI_LAN_IP" && echo Second network IP: $SCI_LAN_IP
+
 if [ -n "$NODE2_NAME" ]; then
-  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m -n $NODE1_NAME:$NODE2_NAME $SERVICE_NAME
+  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV $LANIF -n $NODE1_NAME:$NODE2_NAME $SCI_NAME
 else
   echo "WARNING! Creating the service instance without fallback support. This is strongly not recommended for production use!"
-  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m -n $NODE1_NAME $SERVICE_NAME
+  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV $LANIF -n $NODE1_NAME $SCI_NAME
 fi
 
 ;;
