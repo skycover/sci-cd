@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#vars
+keys_file="/etc/bind/keys"
+
+cd /tmp
+dnssec-keygen -a HMAC-MD5 -b 128 -n HOST sci > /dev/null
+dnssec_key=`cat /tmp/*.key|awk '{print $7}'|sed 's/\//0/`
+rm /tmp/*.{key,private}
+#change keys in config files
+cat <<EOF >  "$keys_file"
+key "DHCP_UPDATE" {
+    algorithm hmac-md5;
+    secret "$dnssec_key";
+};
+EOF
+chown bind "$keys_file"
+chmod 600 "$keys_file"
+
