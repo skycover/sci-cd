@@ -1,5 +1,0 @@
-#!/bin/sh
-test -n "$GANETI_NODE_NAME" || exit 0
-if [ "$GANETI_MASTER" = "`hostname`" ]; then
-  scp /etc/ganeti/networks $GANETI_NODE_NAME:/etc/ganeti/networks
-fi

@@ -416,25 +416,53 @@ cp files/sbin/* $target/usr/local/sbin/
 
 mkdir $target/etc/sci
 cat <<EOF >$target/etc/sci/sci.conf
-# The cluster's name and IP. They MUST be different from node names
-# The cluster's IP will be an interface alias on the current master node
-CLUSTER_NAME=
+# This is the SCI-CD cluster setup parameters
+# Fill the values and execute "sci-setup cluster"
+
+# The cluster's name (without a domain part). It MUST be different from any node's names
+CLUSTER_NAME=gnt
+
+# The cluster's IP. It MUST be different from any node's IP
+# It will be an interface alias on the current master node
+# You should not up this IP address manualy on the node
+# If you have a separate LAN segment then we suggest you to assign this address in the LAN
 CLUSTER_IP=
 
 # The first (master) node data
-# Autofilled on install. On the nodes other than master may be differ, unless synced
 NODE1_NAME=$hostname
 NODE1_IP=$ipaddr
+
+# Optional separate IP for SAN (should be configured and up; ganeti node will be configured with -s option)
 NODE1_SAN_IP=
+# Optional separate IP for LAN (should be configured and up)
+NODE1_LAN_IP=
+
+# Optional additional IP for virtual service machine "sci" in the LAN segment.
+# If NODE1_LAN_IP is set, then you probably wish to set this too.
+# (you should not to pre-configure this IP on the node)
+SCI_LAN_IP=
+# Optional parameters if NODE1_LAN_IP not configured
+# If not set, it will be omited in instance's interface config
+SCI_LAN_NETMASK=
+SCI_LAN_GATEWAY=
 
 # The second node data
+# If you skip NODE2 configuration, then the cluster will be set up in non redundant one-node mode
 NODE2_NAME=
 NODE2_IP=
 NODE2_SAN_IP=
+NODE2_LAN_IP=
 
-#master netdev name
-MASTER_NETDEV=xen-br0
-LINK_NETDEV=xen-br0
+# Network interface for CLUSTER_IP
+# (if set, this interface will be passed to "gnt-cluser init --master-netdev")
+# Autodetect if NODE1_LAN_IP is set and CLUSTER_IP matches LAN network
+MASTER_NETDEV=
+MASTER_NETMASK=
+
+# Network interface to bind to virtual machies by default
+# (if set, this interface will be passed to "gnt-cluster init --nic-parameters link=")
+# Autodetect if NODE1_LAN_IP or MASTER_NETDEV are set
+LAN_NETDEV=
 
 #reserved volumes - what lvm used by nodes system not by cluster(comma separated)
 RESERVED_VOLS="xenvg/system-.*"

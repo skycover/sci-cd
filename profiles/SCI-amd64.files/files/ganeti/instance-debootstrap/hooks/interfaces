@@ -81,16 +81,21 @@ EOF
      echo Configuring static IP on NIC $i
      # /etc/ganeti/networks has format "NETWORK NETMASK BROADCAST GATEWAY"
      NETWORKNUM=`eval $IP2NET "\\$NIC_${i}_IP"`
+     IP=`eval echo "\\$NIC_${i}_IP"`
      
      if [ -z "$NETWORKNUM" ]; then
-       echo Unable to get network number for NIC $i
-       exit 1
+       echo Unable to guess the network for NIC $i from /etc/ganeti/networks
+       echo using default mask /24
+       NETMASK="255.255.255.0"
+       eval NIC_${i}_NETWORK=`ipcalc -n $IP $NETMASK|awk -F"[: /]+" '/^Network:/{print $2; exit 0}'`
+       eval NIC_${i}_NETMASK=`ipcalc -n $IP $NETMASK|awk -F"[: /]+" '/^Netmask:/{print $2; exit 0}'`
+       eval NIC_${i}_BROADCAST=`ipcalc -n $IP $NETMASK|awk -F"[: /]+" '/^Broadcast:/{print $2; exit 0}'`
+     else
+       eval NIC_${i}_NETWORK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $1; exit 0}'`
+       eval NIC_${i}_NETMASK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $2; exit 0}'`
+       eval NIC_${i}_BROADCAST=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $3; exit 0}'`
+       eval NIC_${i}_GATEWAY=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $4; exit 0}'`
      fi
-
-     eval NIC_${i}_NETWORK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $1; exit 0}'`
-     eval NIC_${i}_NETMASK=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $2; exit 0}'`
-     eval NIC_${i}_BROADCAST=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $3; exit 0}'`
-     eval NIC_${i}_GATEWAY=`grep "$NETWORKNUM" /etc/ganeti/networks|awk '{print $4; exit 0}'`
 
      if [ -z "`eval echo "\\$NIC_${i}_NETWORK"`" ]; then
        echo Unable to get interface settings for network $NETWORKNUM NIC $i
@@ -108,7 +113,8 @@ iface eth$i inet static
 EOF
 
       g=`eval echo "\\$NIC_${i}_GATEWAY"`
-      if [ "$i" = "0" -a -n "$g" ]; then
+      if [ -z "$gateway_set" -a -n "$g" ]; then
+         gateway_set=yes
          cat >> $TARGET/etc/network/interfaces <<EOF
 	gateway `eval echo "\\$NIC_${i}_GATEWAY"`
 EOF
