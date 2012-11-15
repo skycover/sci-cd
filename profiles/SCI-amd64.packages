@@ -33,3 +33,5 @@ lvm2
 lsb-release
 acpi-support-base
 ipcalc
+mc
+usbmount
