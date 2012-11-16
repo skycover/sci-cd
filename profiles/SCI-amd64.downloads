@@ -25,7 +25,6 @@ file
 wget
 htop
 links
-mc
 nmap
 zsh
 
