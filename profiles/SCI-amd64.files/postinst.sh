@@ -271,7 +271,12 @@ EOF
 
 ## Add workaround for bnx2x NIC on HP Proliant and Blade servers
 # https://bugzilla.redhat.com/show_bug.cgi?id=518531
-echo "options bnx2x disable_tpa=1" >$target/etc/modprobe.d/sci.conf
+## Disable autosuspend for usb devices which cause some keyboards to hang
+# http://debian.2.n7.nabble.com/Bug-689368-linux-image-3-5-trunk-amd64-Mouse-and-keyboard-freeze-on-Ivy-Bridge-platform-td2508855.html
+cat <<EOF  >$target/etc/modprobe.d/sci.conf
+options bnx2x disable_tpa=1
+options usbcore autosuspend=-1
+EOF
 
 ## Set up symlinks /boot/vmlinuz-2.6-xenU, /boot/initrd-2.6-xenU
 
