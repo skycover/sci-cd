@@ -7,33 +7,3 @@
 # Tune disks
 
 #read_ahead=512
-
-# You'll need directory /stuff for distributive and disk images
-# Yo have 3 ways for this:
-# 1. To have /stuff directory on the root filesystem
-#    Not recomended because you can lost it's data if you will to reinstall the system
-# 2. To have a separate volume (preferable - LVM), mounted to /stuff
-#    You should configure it when defining disk layout during the system installation
-# 3. To have LVM volume 'xenvg/system-stuff'
-#    This can be done completely or semi-automatically, see options for xenvg below
-# In the 2 and 3 cases you have chances to keep data between system reinstalls
-# If /stuff mount point is not configured when defining disk layout and xenvg not present
-# and can't be created, then the case 1 will be used.
-# If xenvg is already present and xenvg/system-stuff is also present then it will be kept
-# and automatically mounted under /stuff
-
-# The default size of the volume for the disk images and distributives
-
-#stuff_volume_size=20G
-
-# The values below will automatically create RAID10 with far layout
-# If not set, then you should manually provide LVM/xenvg at the disk configuration stage
-
-# md-RAID device for LVM/xenvg
-#xenvg_md=/dev/md2
-# RAID10 layout. Use f2 or n2
-#md_layout=f2
-# Disks for RAID. Use patterns or simply enumerate
-#xenvg_disks="/dev/sd[a-d]3"
-# Omit xenvg_spares when no spares
-#xenvg_spares="/dev/sde3"

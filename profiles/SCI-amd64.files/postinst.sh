@@ -302,48 +302,6 @@ if [ ! -f /proc/mounts ]; then
 	proc_mounted=1
 fi
 
-## Create RAID10 with far layout and LVM/xenvg
-# if there is xenvg_disks and xenvg_md then try to create RAID and LVM
-# else expect the xenvg is already configured
-if [ -n "$xenvg_disks" -a -n "$xenvg_md" ]; then
-  echo ...Creating RAID10 with far layout
-  # No preexisting checks - it should simply fail the already completed phases
-  ndisks=`ls $xenvg_disks|wc -w`
-  if [ -n "$xenvg_spares" ]; then
-    spares="`ls $xenvg_spares|wc -w` $xenvg_spares"
-  fi
-  echo "CALLING: mdadm --create -l 10 -n $ndisks --layout=${md_layout:-n2} $xenvg_md $xenvg_disks $spares"
-  mdadm --create -l 10 -n $ndisks --layout=${md_layout:-n2} $xenvg_md $xenvg_disks $spares
-  /usr/share/mdadm/mkconf >$target/etc/mdadm/mdadm.conf
-  # XXX is it needed? will -u reflect right kernel? or better will be -a?
-  #update-initramfs -u
-  vgcreate xenvg $xenvg_md
-fi
-
-## Prepare LVM/xenvg/system-stuff on /stuff for cd images, dumps etc.
-# if /stuff is already present, let's suppose that it is fully configured
-if [ ! -d $target/stuff ]; then
-  echo ...Creating /stuff volume
-  mkdir $target/stuff
-  # don't touch data if volume exists
-  if [ ! -b /dev/xenvg/system-stuff ]; then
-    echo "CALLING: lvcreate -v -L ${stuff_volume_size:-20G} -n system-stuff xenvg"
-    lvcreate -v --noudevsync -L ${stuff_volume_size:-20G} -n system-stuff xenvg
-    if [ $? -eq 0 ]; then
-      sleep 1 # XXX for a case
-      if [ -b /dev/xenvg/system-stuff ]; then
-	echo ...Formatting new xenvg/system-stuff
-	mkfs.ext4 /dev/xenvg/system-stuff
-      fi
-    fi
-  fi
-  # recheck volume and mount
-  if [ -b /dev/xenvg/system-stuff ]; then
-    echo "/dev/xenvg/system-stuff /stuff ext4 errors=remount-ro 0 0" >>$target/etc/fstab
-    mount /stuff
-  fi
-fi
-
 ## Set up CD-ROM repository: create /stuff/cdimages, /media/sci
 
 echo Setting up local CD-ROM repository
@@ -383,13 +341,13 @@ else
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 fi
 
-test -n "$proc_mounted" && umount /proc
-umount /stuff
-
 ## Link /var/lib/ganeti/export to /stuff/export
 
 mkdir $target/stuff/export
 (cd $target/var/lib/ganeti && ln -s $target/stuff/export)
+
+test -n "$proc_mounted" && umount /proc
+umount /stuff
 
 ## Patch ganeti for viridian option
 

@@ -18,6 +18,8 @@ ntpdate
 bind9
 dnsutils
 
+isc-dhcp-server
+
 approx
 
 # useful stuff
@@ -108,8 +110,6 @@ libldap-2.4-2
 libnss-ldap
 libpam-ldap
 slapd
-
-isc-dhcp-server
 
 # postgresql
 postgresql
