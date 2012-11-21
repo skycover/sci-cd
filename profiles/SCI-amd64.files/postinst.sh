@@ -192,6 +192,14 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
+## Remove /media/usb0 mountpoint from fstab as we using usbmount helper
+
+sed -i '/\/media\/usb0/d' $target/etc/fstab
+
+## Add flush option for USB-flash mounted with vfat
+
+./strreplace.sh $target/etc/usbmount/usbmount.conf "^FS_MOUNTOPTIONS" 'FS_MOUNTOPTIONS="-fstype=vfat,flush"'
+
 ## Set localized console and keyboard
 
 cp files/default/* $target/etc/default/
