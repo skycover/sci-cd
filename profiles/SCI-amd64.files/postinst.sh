@@ -192,6 +192,10 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
+## Set localized console and keyboard
+
+cp files/default/* $target/etc/default/
+
 ## Add startup script rc.sci to setup performance
 
 # a bit ugly, but fast ;)
