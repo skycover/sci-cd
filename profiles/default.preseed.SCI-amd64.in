@@ -1,3 +1,19 @@
+# Default preseed file for the SCI-CD project
+# https://github.com/skycover/sci-cd
+
+# This variant implements the automatic partitioning
+# It should be used with SCI-amd64.files/postinst.conf partitioning features
+
+# The automatic disk layout is following:
+# /dev/sd[ab]1 =   10G    = RAID1 = /dev/md0 = root
+# /dev/sd[ab]2 =    2G    = RAID1 = /dev/md1 = swap
+# /dev/sd[ab]3 = the rest = RAID? = not configured
+
+# Using the partitioning options in the postinst.conf you can
+# * add another disks to include to RAID1 for root and swap as the active members
+# * place LVM/xenvg on the RAID10 on /dev/sd[ab*]3 or on the completely another set of disks
+
+
 simple-cdd	simple-cdd/profiles multiselect SCI-amd64
 tasksel		tasksel/first multiselect 
 
@@ -21,22 +37,25 @@ d-i	localechooser/supported-locales multiselect en_US.UTF-8, ru_RU.UTF-8
 d-i     time/zone       select  Europe/Moscow
 tzsetup-udeb	tzsetup/country/RU	select	Europe/Moscow
 
-# You can turn this off and remove console-cyrillic from *.packages
-d-i	console-cyrillic/kbdtype	select	Russian Winkeys
-d-i	console-cyrillic/toggle	select	Control+Shift
-d-i	console-cyrillic/switch	select	No temporary switch
-
-# XXX grub fails the first install, and then get installed ok. don't know, how to skip
-#d-i grub-installer/skip boolean true
-#d-i lilo-installer/skip boolean true
-d-i	grub-installer/only_debian boolean true
-#d-i	grub-installer/with_other_os boolean true
+# Keyboard
+# Keyboard and console fonts will be setup via /etc/default/* files
+#d-i     keyboard-configuration/toggle select	Alt+Shift
+#d-i	console-setup/fontface47 select		Terminus
+#d-i	console-setup/fontsize-text47 select	16
+#d-i	console-setup/charmap47	select		UTF-8
+#d-i	console-setup/codesetcode string	CyrSlav
 
 passwd   passwd/make-user    boolean false
 
 d-i netcfg/choose_interface select auto
 d-i netcfg/disable_dhcp boolean true
 d-i netcfg/wireless_wep string 
+
+
+####partman
+#### INCLUDE PARTMAN ####
+
+####end of partitioning
 
 
 #base-config	apt-setup/uri_type  select cdrom
