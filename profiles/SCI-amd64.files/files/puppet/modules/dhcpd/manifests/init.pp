@@ -9,15 +9,17 @@ class dhcpd($enabled=yes) {
 
         file { "/etc/dhcp/dhcpd.conf": }
 
-        exec { '/bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf; /bin/sed -i "s/changeme/$(/bin/cat /etc/bind/keys|/bin/grep secret|/usr/bin/cut -f6 -d\' \')/" /etc/dhcp/dhcpd.conf; /usr/sbin/dpkg-divert --divert /etc/dhcp/dhcpd.conf --rename /etc/dhcp/dhcpd.conf.dist':
+        exec { '/usr/sbin/dpkg-divert --divert /etc/dhcp/dhcpd.conf.dist --rename /etc/dhcp/dhcpd.conf; /bin/cp -a /etc/dhcp/dhcpd.conf.puppet /etc/dhcp/dhcpd.conf; /bin/sed -i "s/changeme/$(/bin/cat /etc/bind/keys|/bin/grep secret|/usr/bin/cut -f6 -d\' \')/" /etc/dhcp/dhcpd.conf':
+                require =>  File[ "/etc/dhcp/dhcpd.conf.puppet" ],
                 creates =>  [ "/etc/dhcp/dhcpd.conf", ],
         }
 
 if $enabled==yes {
         package {isc-dhcp-server:
-		ensure=> installed,
-		require =>  File[ "/etc/dhcp/dhcpd.conf" ],
-	}
+                ensure=> installed,
+        }
+
+        File [ '/etc/dhcp/dhcpd.conf' ] -> Package [ 'isc-dhcp-server' ]
 
         exec { "/etc/init.d/isc-dhcp-server restart":
                 subscribe => File[ "/etc/dhcp/dhcpd.conf" ],
