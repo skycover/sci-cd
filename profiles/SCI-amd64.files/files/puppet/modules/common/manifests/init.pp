@@ -11,7 +11,8 @@ class common_packages {
 		  'psmisc',
 		  'openssh-client',
 		  'dnsutils',
-		  'sudo'
+		  'sudo',
+		  'bash-completion',
 		]:
 		ensure => installed
 	}

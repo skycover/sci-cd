@@ -32,6 +32,7 @@ zsh
 
 # various stuff
 console-cyrillic
+bash-completion
 
 # exim
 exim4
