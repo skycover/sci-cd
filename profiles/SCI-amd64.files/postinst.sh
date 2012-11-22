@@ -144,9 +144,23 @@ EOF
 
 cat <<EOF >>interfaces
 
+# The exmample for static IP on LAN interface
+# on the second ethernet card
+
+#auto xen-lan
+#iface xen-lan inet static
+#        address 192.168.X.X
+#        netmask 255.255.255.0
+#        network 192.168.X.0
+#        broadcast 192.168.X.255
+#        gateway 192.168.X.1
+#        bridge_ports eth1
+#        bridge_stp off
+#        bridge_fd 0
+
 # The example of dhcp-configured LAN interface
 # on the second ethernet card
-#
+
 #auto xen-lan
 #iface xen-lan inet dhcp
 #        bridge_ports eth1
