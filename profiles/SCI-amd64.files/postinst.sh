@@ -324,6 +324,10 @@ if [ ! -f /proc/mounts ]; then
 	proc_mounted=1
 fi
 
+# Mount /stuff if we detect unmounted xenvg/system-stuff
+mkdir -p $target/stuff
+grep -q /stuff /proc/mounts || test -b $target/dev/xenvg/system-stuff && test -d $target/stuff && grep -q /stuff $target/etc/fstab && mount $target/stuff
+
 ## Set up CD-ROM repository: create /stuff/cdimages, /media/sci
 
 echo Setting up local CD-ROM repository

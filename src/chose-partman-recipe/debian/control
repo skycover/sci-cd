@@ -1,0 +1,13 @@
+Source: chose-partman-recipe
+Section: debian-installer
+Priority: standard
+Maintainer: Dmitry Chernyak <dmi@skycover.ru>
+Build-Depends: debhelper (>> 4.2), cdbs
+Standards-Version: 3.7.2.1
+
+Package: chose-partman-recipe
+XC-Package-Type: udeb
+Architecture: all
+XB-Installer-Menu-Item: 4100
+Description: Let user to chose predefined partitioning recipe
+ Use this module to simplify the common server partitioning cases.
