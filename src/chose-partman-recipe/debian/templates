@@ -1,0 +1,21 @@
+Template: chose-partman-recipe/recipe
+Type: select
+Default: Manual
+Choices: Manual, 1 disk with LVM, 1 disk with deferred LVM, 2 disks with LVM, 2 disks with defered LVM, 4 disks with LVM, 6 disks with LVM, 8 disks with LVM
+Description: Chose partitioning recipe
+ Please chose the one of predefined partitioning schemes, which will create:
+  * root (10G) and swap (2G) primary partitions
+  * LVM volume group named "xenvg" with volume system-stuff (20G)
+ .
+ If LVM setup is deferred, then it should be initialized later via "sci-setup xenvg"
+  It can be placed on the same or on the another devices.
+ .
+ If you chose two or more disks, the software RAID will be used as follows:
+   - root and swap will be on RAID1 with mirrors on all of the disks
+   - LVM will be created with RAID1 on two disks or RAID10 on 4 or moore disks
+ .
+ NOTE1: We don't recommend you to use RAID5 or RAID6 because they offering
+ less productivity for the concurrent access environment.
+ .
+ NOTE2: RAID10 offers much more productivity than RAID1 but you'll not be
+ able to add new disks. (Really, this is not a big problem in a cluster ;)

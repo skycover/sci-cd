@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+
+install/chose-partman-recipe::
+	dh_installdebconf
+	install -o 0 -g 0 -m 755 -p debian/config debian/chose-partman-recipe/DEBIAN/config
+	#install -o 0 -g 0 -m 755 -p debian/config debian/chose-partman-recipe/DEBIAN/chose-partman-recipe.config
+	install -o 0 -g 0 -m 644 -p debian/templates debian/chose-partman-recipe/DEBIAN/templates
+	#install -o 0 -g 0 -m 644 -p debian/templates debian/chose-partman-recipe/DEBIAN/chose-partman-recipe.templates
+	install -o root -g root -m 0644 *.preseed debian/$(cdbs_curpkg)/usr/lib/chose-partman-recipe/
