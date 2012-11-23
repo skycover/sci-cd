@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+#export DEBCONF_DEBUG=developer
+
+# Do you like debian?
+#db_reset chose-partman-recipe/recipe || true
+db_input high chose-partman-recipe/recipe || true
+db_go || true
+
+db_get chose-partman-recipe/recipe || true
+#db_purge chose-partman-recipe
+
+#DEBHELPER#
+
+exit 0
+

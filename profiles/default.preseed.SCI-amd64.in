@@ -17,6 +17,8 @@
 simple-cdd	simple-cdd/profiles multiselect SCI-amd64
 tasksel		tasksel/first multiselect 
 
+#### ADD chose-partman-recipe ####
+
 # Also used kernel string in *.conf to auto-accept all of theese
 d-i	debian-installer/country	string	US
 d-i	localechooser/shortlist	select	US
