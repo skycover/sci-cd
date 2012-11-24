@@ -2,25 +2,28 @@ SkyCover Infrastructure installation CD-ROM
 
 https://redmine.skycover.ru/projects/sci-cd/wiki
 
-This is the Debian/GNU Linux custom CD-ROM, which helps to
+This is the Debian/GNU Linux custom CD-ROM, which helps to install
+the complete high availability cluster infrastructure in less than a 1 hour.
 
-* Install Ganeti cluster with Xen and DRBD (http://code.google.com/p/ganeti/)
-* Tune (automatically) over 30 Xen Linux system parameters
-* Set up virtual instance with Puppet master, BIND9 and Approx
-* Run Linux and Windows virtual machines
+* Based on Ganeti, Xen and DRBD (http://code.google.com/p/ganeti/)
+* Optimized and quet installer with predefined partitioning schemes
+* Tune (automatically) over 30 Xen Linux system parameters for productivity
+* Set up virtual instance with configured Puppet, BIND9, DHCPD and Approx
+* Ready for Linux and Windows virtual machines
 
-Includes:
+SCI-CD includes pre-tuned components:
 
-* XEN-hypervisor 4.0 amd64
+* XEN-hypervisor 4.0 amd6
 * Dom0 amd64
 * drbd
-* vlan
-* ganeti
-* puppet
-* zabbix client
-* amanda client
-* and various tools
+* ganeti - cluster failover management
+* vlan   - 802.1q support
+* puppet - the autoconfiguration for nodes and instances
+* bind9  - DNS server in chrooted mode
+* dhcpd  - with DDNS support
+* approx - apt packages proxy, linked to network Debian mirrors and the sci-cd.iso
 
-You'll need sharutils (for uuencode) and simple-cdd to build the project.
+To build the project you'll need Debian/GNU environment with these packages:
+sharutils simple-cdd debhelper dpkg-dev
 
 Read OVERVIEW next.
