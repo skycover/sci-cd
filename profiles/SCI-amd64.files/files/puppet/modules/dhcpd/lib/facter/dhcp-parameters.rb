@@ -18,7 +18,7 @@ end
 
 Facter.add("sci_dhcp_hostmax") do
         setcode do
-                %x{if (ip addr show eth1 > /dev/null) then ipcalc `ip addr show eth1|grep inet\ |cut -f6 -d' '`|grep HostMax|cut -f4 -d' '; else ipcalc `ip addr show eth0|grep inet\ |cut -f6 -d' '`|grep HostMax|cut -f4 -d' '; fi}.chomp
+                %x{if (ip addr show eth1 > /dev/null) then ipcalc `ip addr show eth1|grep inet\ |cut -f6 -d' '`|grep HostMax|cut -f4 -d' '; else ipcalc `ip addr show eth0|grep inet\ |cut -f6 -d' '`|grep HostMax|cut -f4 -d' '|awk -F. '{print $1"."$2"."$3"."$4-5}'; fi}.chomp
         end
 end
 
