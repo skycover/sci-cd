@@ -1,7 +1,7 @@
 Template: chose-partman-recipe/recipe
 Type: select
 Default: Manual
-Choices: Manual, 1 disk with LVM, 1 disk with deferred LVM, 2 disks with LVM, 2 disks with defered LVM, 4 disks with LVM, 6 disks with LVM, 8 disks with LVM
+Choices: Manual, 1 disk with LVM, 1 disk with deferred LVM, 2 disks with LVM, 2 disks with deferred LVM, 4 disks with LVM, 6 disks with LVM, 8 disks with LVM
 Description: Chose partitioning recipe
  Please chose the one of predefined partitioning schemes, which will create:
   * root (10G) and swap (2G) primary partitions
