@@ -4,6 +4,8 @@
 
 set -x
 
+VERSION=1.0
+
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 # XXX needed for handling around reloc_domain
 
@@ -405,6 +407,14 @@ cp -r files/os $target/usr/share/ganeti/
 
 cp files/sbin/* $target/usr/local/sbin/
 
+# Write motd
+cat <<EOF >$target/etc/motd
+
+SkyCover Infrastructure high availability cluster node, ver. $VERSION
+For more information see http://redmine.skycover.ru/projects/sci-cd
+
+EOF
+
 ## Filling SCI configuration template
 
 mkdir $target/etc/sci
@@ -470,3 +480,6 @@ APT_SECURITY="security http://security.debian.org/"
 DNS_FORWARDERS=""
 
 EOF
+
+# Write installed version information
+echo $VERSION >$target/etc/sci/sci.version

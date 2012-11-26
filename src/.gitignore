@@ -1,0 +1,4 @@
+*.udeb
+*.changes
+*.dsc
+*.gz
