@@ -12,9 +12,6 @@ less
 
 iproute
 
-ntp
-ntpdate
-
 bind9
 dnsutils
 
