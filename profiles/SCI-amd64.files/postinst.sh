@@ -422,20 +422,23 @@ cat <<EOF >$target/etc/sci/sci.conf
 # This is the SCI-CD cluster setup parameters
 # Fill the values and execute "sci-setup cluster"
 
-# The cluster's name (without a domain part). It MUST be different from any node's names
+# The hostname to represent the cluster (without a domain part).
+# It MUST be different from any node's hostnames
 CLUSTER_NAME=gnt
 
-# The cluster's IP. It MUST be different from any node's IP
-# It will be an interface alias on the current master node
-# You should not up this IP address manualy on the node
-# If you have a separate LAN segment then we suggest you to assign this address in the LAN
+# The IP address corresponding to CLUSTER_NAME.
+# It MUST be different from any node's IP.
+# You should not up this IP address manualy - it will be automatically
+# activated as an interface alias on the current master node
+# We suggest to assign this address in the LAN (if LAN segment is present)
 CLUSTER_IP=
 
 # The first (master) node data
 NODE1_NAME=$hostname
 NODE1_IP=$ipaddr
 
-# Optional separate IP for SAN (should be configured and up; ganeti node will be configured with -s option)
+# Optional separate IP for SAN (should be configured and up;
+# ganeti node will be configured with -s option)
 NODE1_SAN_IP=
 # Optional separate IP for LAN (should be configured and up)
 NODE1_LAN_IP=
@@ -450,7 +453,7 @@ SCI_LAN_NETMASK=
 SCI_LAN_GATEWAY=
 
 # The second node data
-# If you skip NODE2 configuration, then the cluster will be set up in non redundant one-node mode
+# If you skip it, then the cluster will be set up in non redundant mode
 NODE2_NAME=
 NODE2_IP=
 NODE2_SAN_IP=
@@ -463,11 +466,13 @@ MASTER_NETDEV=
 MASTER_NETMASK=
 
 # Network interface to bind to virtual machies by default
-# (if set, this interface will be passed to "gnt-cluster init --nic-parameters link=")
+# (if set, this interface will be passed to
+# "gnt-cluster init --nic-parameters link=")
 # Autodetect if NODE1_LAN_IP or MASTER_NETDEV are set
 LAN_NETDEV=
 
-#reserved volumes - what lvm used by nodes system not by cluster(comma separated)
+# reserved volume names are ignored by Ganety and may be used for any needs
+# (comma separated)
 RESERVED_VOLS="xenvg/system-.*"
 
 # sources for approx apt cache server on sci

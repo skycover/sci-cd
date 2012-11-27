@@ -13,7 +13,7 @@ the complete high availability cluster infrastructure in less than a 1 hour.
 
 SCI-CD includes pre-tuned components:
 
-* XEN-hypervisor 4.0 amd6
+* XEN-hypervisor 4.0 amd64
 * Dom0 amd64
 * drbd
 * ganeti - cluster failover management
