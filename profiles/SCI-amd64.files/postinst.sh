@@ -348,6 +348,15 @@ MIRROR=file:/media/sci/
 ARCH=amd64
 SUITE=squeeze
 EXTRA_PKGS="linux-image-xen-amd64"
+
+# For Ubuntu
+if [ "\$OS_NAME" = "ubootstrap" ]; then
+CUSTOMIZE_DIR=/etc/ganeti/instance-ubootstrap/hooks
+VARIANTS_DIR=/etc/ganeti/instance-ubootstrap/variants
+MIRROR=http://us.archive.ubuntu.com/ubuntu/
+SUITE=precise
+EXTRA_PKGS="linux-image-virtual"
+fi
 EOF
 
 ## Copy-in SCI-CD iso image to /stuff/cdimages, mount to /media/sci, set up sources.list
@@ -398,9 +407,27 @@ mkdir -p $target/etc/ganeti/instance-debootstrap/variants
 cp -r files/ganeti/instance-debootstrap/variants/* $target/etc/ganeti/instance-debootstrap/variants/
 echo sci >>$target/etc/ganeti/instance-debootstrap/variants.list
 
-## Add ganeti OS "windows" scripts (ntfsclone - based) and simple "raw"
+## Add ganeti OS "windows" scripts (ntfsclone - based)
 
-cp -r files/os $target/usr/share/ganeti/
+cp -r files/os/windows $target/usr/share/ganeti/os/
+
+## Add ganeti OS "ubootstrap" scripts for Ubuntu debootstrap
+
+(cd /usr/share/deboostrap/scripts; ln -s gutsy precise)
+
+cp -r files/ganeti/instance-ubootstrap $target/etc/ganeti/
+(cd $target/etc/ganeti/instance-ubootstrap/hooks;
+for i in clear-root-password grub interfaces; do
+  ln -s ../../instance-debootstrap/hooks/$i
+done
+)
+mkdir -p $target/usr/share/ganeti/os/ubootstrap
+(cd $target/usr/share/ganeti/os/ubootstrap
+for i in common.sh  create  export  ganeti_api_version  import  rename; do
+  ln -s ../debootstrap/$i
+done
+ln -s /etc/ganeti/instance-ubootstrap/variants.list
+)
 
 ## Add SCI deploing scripts
 ## Make LV names 'system-.*' ignored by ganeti
