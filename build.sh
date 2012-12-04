@@ -59,6 +59,9 @@ while getopts "hp:d:v:l:" opt; do
 done
 
 if [ -z "$disks" ]; then
+
+  echo Building udeb for predefined disk layouts
+
   cp profiles/default.preseed.$profile.in profiles/default.preseed
   echo "#no options" >src/chose-partman-recipe/manual.preseed
   ./partgen.sh -d 1 -l 1 >src/chose-partman-recipe/d1l1.preseed
@@ -73,11 +76,26 @@ if [ -z "$disks" ]; then
   cp src/chose-partman-recipe*.udeb local
   test -d tmp/mirror && (cd tmp/mirror; reprepro remove squeeze chose-partman-recipe)
 else
+
+  echo Auto apply single user-predefined layout
+
   awk '//{print}/#### INCLUDE PARTMAN ####/{exit}' profiles/default.preseed.$profile.in >profiles/default.preseed
   ./partgen.sh -d $disks -v $partvar -l $partlvm >>profiles/default.preseed
   echo "d-i chose-partman-recipe/recipe select Preseed" >>profiles/default.preseed
   awk '//{if(s)print}/#### INCLUDE PARTMAN ####/{print "#### PARTMAN INCLUDED ####"; s=1}' profiles/default.preseed.$profile.in >>profiles/default.preseed
 fi
+
+# Prepare puppet modules as git repository with github upstream
+
+if [ -d profiles/$profile.files/files/root/puppet/.git ]; then
+  echo Pull sci-puppet
+  (cd profiles/$profile.files/files/root/puppet; git pull)
+else
+  echo Clone sci-puppet
+  git clone https://github.com/skycover/sci-puppet.git profiles/$profile.files/files/root/puppet
+fi
+
+# Make the installation bundle
 
 if [ -d profiles/$profile.files ]; then
  cd profiles

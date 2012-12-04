@@ -44,4 +44,19 @@ EOF
 
 mkdir "$TARGET/etc/puppet/files"
 
-cp -r /usr/local/simple-cdd/SCI-amd64.files/files/puppet/* "$TARGET/etc/puppet/"
+cp -r /usr/local/simple-cdd/SCI-amd64.files/files/root/puppet "$TARGET/root"
+(cd "$TARGET/root/puppet" || exit 1
+ git checkout -b local
+ cd ..
+ mkdir tmp
+ git clone -b local puppet tmp/puppet
+ cd tmp/puppet
+ git remote rm origin
+ git remote add origin /root/puppet
+ git config branch.local.remote origin
+ git config branch.local.merge refs/heads/local
+ cd ..
+ cp -a puppet "$TARGET/etc/"
+ cd ..
+ rm -rf tmp
+)
