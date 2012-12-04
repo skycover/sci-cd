@@ -208,6 +208,10 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
+## Enable smartd to start
+
+./strreplace.sh $target/etc/default/smartmontools "#start_smartd=yes" "start_smartd=yes"
+
 ## Remove /media/usb0 mountpoint from fstab as we using usbmount helper
 
 sed -i '/\/media\/usb0/d' $target/etc/fstab
