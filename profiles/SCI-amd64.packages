@@ -36,5 +36,4 @@ ipcalc
 mc
 usbmount
 console-setup
-ntpdate
-ntp
+chrony
