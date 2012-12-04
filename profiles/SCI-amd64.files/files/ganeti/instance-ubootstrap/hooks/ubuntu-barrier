@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Disable barrier because it causing fs crash under XEN upon startup
+
+set -e
+
+if [ -z "$TARGET" -o ! -d "$TARGET" ]; then
+  echo "Missing target directory"
+  exit 1
+fi
+
+# http://invalidlogic.com/2012/04/28/ubuntu-precise-on-xenserver-disk-errors/
+echo current fstab:
+cat $TARGET/etc/fstab
+
+echo Disabling barrier for /
+sed -i 's/ext3[ \t]\+defaults/ext3    defaults,barrier=0/' $TARGET/etc/fstab
+
+exit 0
