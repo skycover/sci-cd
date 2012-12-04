@@ -18,6 +18,12 @@ class approx_local {
 	$Release = "/media/sci/dists/squeeze/Release"
 	$approxModule = "/etc/puppet/modules/approx"
 
+	file { "/etc/sci":
+		owner => "root",
+		group => "root",
+		mode => 0755,
+		ensure => [directory, present],
+	}
 	file { "$GPGDir":
 		owner => "root",
 		group => "root",
@@ -62,15 +68,19 @@ class approx_local {
 
 # sources.list with apt key for local repos
 class sources_list_local {
+	if defined(File['/etc/sci']) == false {
 	file { "/etc/sci":
 		owner => "root",
 		group => "root",
 		mode => 0755,
 		ensure => [directory, present],
+		}
 	}
+
 	file { "/etc/sci/sci.pub":
 		owner => "root", group => "root", mode => 0644,
 		source => 'puppet:///modules/approx/sci.pub',
+		require => File["/etc/sci"],
 	}
 	exec { apt-key-add-sci:
 		command => "/usr/bin/apt-key add /etc/sci/sci.pub",
