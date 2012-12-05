@@ -208,6 +208,14 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
+## Enable smartd to start
+
+./strreplace.sh $target/etc/default/smartmontools "^#start_smartd=yes" "start_smartd=yes"
+
+## Tune temperature warning on smartd
+
+./strreplace.sh $target/etc/smartd.conf "^DEVICESCAN" "DEVICESCAN -d removable -n standby -m root -R 194 -R 231 -I 9 -W 5,50,55 -M exec /usr/share/smartmontools/smartd-runner"
+
 ## Remove /media/usb0 mountpoint from fstab as we using usbmount helper
 
 sed -i '/\/media\/usb0/d' $target/etc/fstab
