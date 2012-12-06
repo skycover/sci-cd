@@ -519,6 +519,13 @@ APT_SECURITY="security http://security.debian.org/"
 # use syntax "1.2.3.4; 1.2.3.4;"
 DNS_FORWARDERS=""
 
+# Locale and timezone for cluster
+# It will be set via puppet
+TIMEZONE="Europe/Moscow"
+#TIMEZONE="US/Pacific"
+LOCALE="ru_RU.UTF-8"
+#LOCALE="en_US.UTF-8"
+
 EOF
 
 # Write installed version information
