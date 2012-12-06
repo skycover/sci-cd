@@ -44,9 +44,14 @@ EOF
 
 mkdir "$TARGET/etc/puppet/files"
 
+# clone git repo and make auto config for locale and timezone
+. /etc/sci/sci.conf
 cp -r /usr/local/simple-cdd/SCI-amd64.files/files/root/puppet "$TARGET/root"
 (cd "$TARGET/root/puppet" || exit 1
  git checkout -b local
+ sed -i "s/Europe\/Moscow/$(echo $TIMEZONE|sed 's/\//\\\//')/" manifests/nodes.pp
+ sed -i "s/ru_RU.UTF-8/$LOCALE/" manifests/nodes.pp
+ git commit -a -m "automatically set timezone $TIMEZONE and locale $LOCALE by ganeti create-instance hook"
  cd ..
  mkdir tmp
  git clone -b local puppet tmp/puppet
