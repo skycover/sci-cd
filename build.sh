@@ -5,12 +5,13 @@
 
 usage(){
   cat <<EOF >&2
-build.sh [-p PROFILE] -d DISKS|all [-v yes|no] -l [1|10|none]
+build.sh [-p PROFILE] [-b BRANCH] [-d DISKS|all [-v yes|no] [-l 1|10|none]]
   -p PROFILE  - default: SCI-amd64
+  -b BRANCH - clone specific branch of puppet modules; default is master
   -d [DISKS|manual] - the number of disks for the system raid, starting from sda, default: 1
    Use "manual" for manual layout.
   -v - create /var partition (default are the root and swap partitions only)
-  -l [LEVEL|none] - create RAID1/5/6/10 with lvm xenvg and xenvg/system-stuff
+  -l LEVEL|none - create RAID1/5/6/10 with lvm xenvg and xenvg/system-stuff
    LEVEL is the number, default: 1.
    If DISKS=1 then simple partition will be created instead of RAID.
    Use "none" if you wish to create LVM manually later - the "sci-setup xenvg"
@@ -26,8 +27,9 @@ fi
 profile=SCI-amd64
 partvar=no
 partlvm=yes
+branch=master
 
-while getopts "hp:d:v:l:" opt; do
+while getopts "hp:d:v:l:b:" opt; do
   case $opt in
   h)
     usage
@@ -44,6 +46,9 @@ while getopts "hp:d:v:l:" opt; do
   ;;
   l)
     partlvm=$OPTARG
+  ;;
+  b)
+    branch=$OPTARG
   ;;
   \?)
     echo "Invalid option: -$OPTARG" >&2
@@ -87,12 +92,15 @@ fi
 
 # Prepare puppet modules as git repository with github upstream
 
-if [ -d profiles/$profile.files/files/root/puppet/.git ]; then
+puppet_dir=profiles/$profile.files/files/root/puppet
+if [ -d $puppet_dir/.git ]; then
   echo Pull sci-puppet
-  (cd profiles/$profile.files/files/root/puppet; git pull)
+  # We will prefetch the desired branch in the case it was not exists upon previous clone
+  (cd $puppet_dir; git fetch origin $branch; git checkout $branch; git pull)
 else
   echo Clone sci-puppet
-  git clone https://github.com/skycover/sci-puppet.git profiles/$profile.files/files/root/puppet
+  git clone https://github.com/skycover/sci-puppet.git $puppet_dir
+  (cd $puppet_dir; git checkout $branch)
 fi
 
 # Make the installation bundle
