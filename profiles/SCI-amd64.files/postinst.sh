@@ -421,7 +421,7 @@ cp -r files/os/windows $target/usr/share/ganeti/os/
 
 ## Add ganeti OS "ubootstrap" scripts for Ubuntu debootstrap
 
-(cd /usr/share/deboostrap/scripts; ln -s gutsy precise)
+(cd $target/usr/share/debootstrap/scripts; ln -s gutsy precise)
 
 cp -r files/ganeti/instance-ubootstrap $target/etc/ganeti/
 (cd $target/etc/ganeti/instance-ubootstrap/hooks;
