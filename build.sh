@@ -103,6 +103,11 @@ else
   (cd $puppet_dir; git checkout $branch)
 fi
 
+# Prepare gplpv.iso for Windows instances
+# Note: -t supress repeated download if something already exists in gplpv/univention
+# But if your download is broken, just run "./makegplpv.sh" once manually before build.sh
+./makegplpv.sh -t
+
 # Make the installation bundle
 
 if [ -d profiles/$profile.files ]; then

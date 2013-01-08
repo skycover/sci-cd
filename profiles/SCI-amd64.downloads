@@ -26,6 +26,7 @@ htop
 links
 nmap
 zsh
+genisoimage
 
 # various stuff
 console-cyrillic
@@ -43,6 +44,10 @@ libusbip-dev
 libusbip0
 usbip-source
 usbip
+
+# windows
+ntfs-3g
+dosfstools
 
 # zabbix
 zabbix-agent
