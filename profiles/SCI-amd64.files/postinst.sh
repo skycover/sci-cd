@@ -191,7 +191,7 @@ cat interfaces >$ifs
 ## Set up module loading (drbd, 8021q)
 
 echo Setting up modules
-echo options drbd minor_count=128 usermode_helper=/bin/true >>$target/etc/modprobe.d/drbd
+echo options drbd minor_count=128 usermode_helper=/bin/true >>$target/etc/modprobe.d/drbd.conf
 echo drbd >>$target/etc/modules
 echo 8021q >>$target/etc/modules
 
