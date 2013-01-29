@@ -108,6 +108,9 @@ fi
 # But if your download is broken, just run "./makegplpv.sh" once manually before build.sh
 ./makegplpv.sh -t
 
+# Write the current commit number to a file git-commit.txt
+git log|head -1 >profiles/$profile.files/git-commit.txt
+
 # Make the installation bundle
 
 if [ -d profiles/$profile.files ]; then
