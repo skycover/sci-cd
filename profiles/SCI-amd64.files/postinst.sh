@@ -338,6 +338,9 @@ fi
 mkdir -p $target/stuff
 grep -q /stuff /proc/mounts || test -b $target/dev/xenvg/system-stuff && test -d $target/stuff && grep -q /stuff $target/etc/fstab && mount $target/stuff
 
+# Place commented-out template for /stuff if no one
+grep -q /stuff $target/etc/fstab || echo "#/dev/xenvg/system-stuff /stuff ext4 errors=remount-ro 0 0" >>$target/etc/fstab
+
 ## Set up CD-ROM repository: create /stuff/cdimages, /media/sci
 
 echo Setting up local CD-ROM repository

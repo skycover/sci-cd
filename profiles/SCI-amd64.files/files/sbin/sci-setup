@@ -378,13 +378,14 @@ Sorry, but this operation is not supported yet.
 
 To xreate xenvg, use the following scheme:
 
-vgcreate xenvd /dev/DEVICE_OF_YOUR_CHOICE
+vgcreate xenvg /dev/DEVICE_OF_YOUR_CHOICE
 lvcreate -L 20G -n system-stuff xenvg
 mkfs.ext4 /dev/xenvg/system-stuff
-mount /dev/xenvd/system-stuff /mnt
+mount /dev/xenvg/system-stuff /mnt
 mv /stuff/* /mnt
 umount /mnt
-echo "/dev/xenvg/system-stuff	/stuff	ext4	errors=remount-ro	0	0" >>/etc/fstab
+# add "/dev/xenvg/system-stuff /stuff ext4 errors=remount-ro 0 0"
+# into /etc/fstab just BEFORE mount of /media/sci
 mount /stuff 
 EOF
 ;;
