@@ -389,6 +389,10 @@ else
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 fi
 
+## Symlink gplpv.iso with signed windows drivers to /stuff/cdimages
+# this file can also be found in /media/sci/simple-cdd/gplpv.iso
+ln -s /media/sci/simple-cdd/gplpv.iso $target/stuff/cdimages/gplpv.iso
+
 ## Link /var/lib/ganeti/export to /stuff/export
 
 mkdir $target/stuff/export
