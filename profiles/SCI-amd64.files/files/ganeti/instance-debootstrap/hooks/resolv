@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# Set up hosts and resolv.conf for LAN
+
+set -e
+
+test "$OS_VARIANT" = "sci" && exit 0
+
+if [ -z "$TARGET" -o ! -d "$TARGET" ]; then
+  echo "Missing target directory"
+  exit 1
+fi
+
+echo Setting up hosts
+
+cat <<EOF >"$TARGET/etc/hosts"
+127.0.0.1       localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+127.0.1.1  $INSTANCE_NAME `echo $INSTANCE_NAME|cut -d. -f1`
+EOF
+
+. /etc/sci/sci.conf
+
+test -z "$SCI_LAN_IP" && exit 0
+echo Setting up resolv.conf for LAN
+
+grep ^search /etc/resolv.conf >"$TARGET/etc/resolv.conf"
+echo "nameserver $SCI_LAN_IP" >>"$TARGET/etc/resolv.conf"
+
+
+exit 0

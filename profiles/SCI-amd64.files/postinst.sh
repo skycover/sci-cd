@@ -432,7 +432,7 @@ cp -r files/os/windows $target/usr/share/ganeti/os/
 
 cp -r files/ganeti/instance-ubootstrap $target/etc/ganeti/
 (cd $target/etc/ganeti/instance-ubootstrap/hooks;
-for i in clear-root-password grub interfaces; do
+for i in clear-root-password grub interfaces resolv; do
   ln -s ../../instance-debootstrap/hooks/$i
 done
 )
