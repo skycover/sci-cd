@@ -25,6 +25,7 @@ libruby
 psmisc
 git
 ntfsprogs
+ntfs-3g
 mbr
 patch
 sysfsutils
