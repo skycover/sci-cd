@@ -46,7 +46,6 @@ usbip-source
 usbip
 
 # windows
-ntfs-3g
 dosfstools
 
 # zabbix
