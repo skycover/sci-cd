@@ -126,3 +126,6 @@ postgresql-contrib-8.4
 dovecot-common
 dovecot-imapd
 dovecot-pop3d
+
+# partition utils
+parted
