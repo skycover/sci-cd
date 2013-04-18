@@ -355,18 +355,23 @@ EOF
 ## Set up ganeti-instance-debootstrap source to local SCI-CD image
 
 cat <<EOF >>$target/etc/default/ganeti-instance-debootstrap
-MIRROR=file:/media/sci/
-ARCH=amd64
-SUITE=squeeze
-EXTRA_PKGS="linux-image-xen-amd64"
-
 # For Ubuntu
 if [ "\$OS_NAME" = "ubootstrap" ]; then
-CUSTOMIZE_DIR=/etc/ganeti/instance-ubootstrap/hooks
-VARIANTS_DIR=/etc/ganeti/instance-ubootstrap/variants
-MIRROR=http://us.archive.ubuntu.com/ubuntu/
-SUITE=precise
-EXTRA_PKGS="linux-image-virtual"
+  CUSTOMIZE_DIR=/etc/ganeti/instance-ubootstrap/hooks
+  VARIANTS_DIR=/etc/ganeti/instance-ubootstrap/variants
+  MIRROR=http://us.archive.ubuntu.com/ubuntu/
+  SUITE=precise
+  EXTRA_PKGS="linux-image-virtual"
+elif [ "\$OS_NAME" = "debootstrap" ]; then
+  ARCH=amd64
+  EXTRA_PKGS="linux-image-xen-amd64"
+  if [ "\$OS_VARIANT" = "wheezy" ]; then
+    SUITE=wheezy
+	EXTRA_PKGS="linux-image-amd64"
+  else
+    MIRROR=file:/media/sci/
+    SUITE=squeeze
+  fi
 fi
 EOF
 
@@ -421,6 +426,7 @@ cp -r files/ganeti/instance-debootstrap/hooks/* $target/etc/ganeti/instance-debo
 mkdir -p $target/etc/ganeti/instance-debootstrap/variants
 cp -r files/ganeti/instance-debootstrap/variants/* $target/etc/ganeti/instance-debootstrap/variants/
 echo sci >>$target/etc/ganeti/instance-debootstrap/variants.list
+echo wheezy >>$target/etc/ganeti/instance-debootstrap/variants.list
 
 ## Add ganeti OS "windows" scripts (ntfsclone - based)
 
