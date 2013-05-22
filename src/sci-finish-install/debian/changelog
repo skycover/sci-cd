@@ -1,0 +1,5 @@
+sci-finish-install (0.1) stable; urgency=low
+
+  * Initial Packaging 
+
+ -- Dmitry Chernyak <dmi@skycover.ru>  Thu, 22 Nov 2012 15:05:29 +0400

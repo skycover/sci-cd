@@ -22,8 +22,8 @@ fi
 
 mkdir -p usbkey
 cd usbkey
-test -f initrd.gz || wget http://ftp.uk.debian.org/debian/dists/squeeze/main/installer-amd64/current/images/hd-media/initrd.gz
-test -f vmlinuz || wget http://ftp.uk.debian.org/debian/dists/squeeze/main/installer-amd64/current/images/hd-media/vmlinuz
+test -f initrd.gz || wget http://ftp.uk.debian.org/debian/dists/wheezy/main/installer-amd64/current/images/hd-media/initrd.gz
+test -f vmlinuz || wget http://ftp.uk.debian.org/debian/dists/wheezy/main/installer-amd64/current/images/hd-media/vmlinuz
 # this is not obligate and will erase all the contents
 #mkdosfs ${d}1
 syslinux ${d}1
@@ -31,5 +31,5 @@ install-mbr $d
 mount ${d}1 "$target"
 cp initrd.gz vmlinuz "$target"
 echo "default vmlinuz" > "$target"/syslinux.cfg
-grep append ../tmp/cd-build/squeeze/boot1/isolinux/txt.cfg | head -1 | sed -e 's/^\t//' -e 's/ initrd=[^ ]*/ initrd=initrd.gz/' >>"$target"/syslinux.cfg
+grep append ../tmp/cd-build/wheezy/boot1/isolinux/txt.cfg | head -1 | sed -e 's/^\t//' -e 's/ initrd=[^ ]*/ initrd=initrd.gz/' >>"$target"/syslinux.cfg
 echo "Now you can copy any *.iso image directly to usb filesystem (currently mounted on \"$target\")"

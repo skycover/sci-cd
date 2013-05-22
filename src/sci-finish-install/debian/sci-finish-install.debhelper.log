@@ -17,9 +17,11 @@ dh_installlogcheck
 dh_installchangelogs
 dh_installudev
 dh_lintian
+dh_bugfiles
 dh_install
 dh_link
 dh_installmime
+dh_installgsettings
 dh_strip
 dh_compress
 dh_fixperms
@@ -29,4 +31,5 @@ dh_perl
 dh_shlibdeps
 dh_gencontrol
 dh_md5sums
+dh_builddeb
 dh_builddeb

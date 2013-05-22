@@ -1,0 +1,13 @@
+Source: sci-finish-install
+Section: debian-installer
+Priority: standard
+Maintainer: Dmitry Chernyak <dmi@skycover.ru>
+Build-Depends: debhelper (>> 4.2), cdbs
+Standards-Version: 3.7.2.1
+
+Package: sci-finish-install
+XC-Package-Type: udeb
+Architecture: all
+XB-Installer-Menu-Item: 4100
+Description: Finish-install hooks for sci projects
+ 70sci-copy-netcfg to copy generated netcfg after standard networking hooks

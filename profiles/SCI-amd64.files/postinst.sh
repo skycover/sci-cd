@@ -186,7 +186,7 @@ cat <<EOF >>interfaces
 #        down brctl delbr xen-VLAN_NAME
 EOF
 
-cat interfaces >$ifs
+cat interfaces >$ifs.tmp
 
 ## Set up module loading (drbd, 8021q)
 
@@ -317,11 +317,11 @@ EOF
 ## Set up symlinks /boot/vmlinuz-2.6-xenU, /boot/initrd-2.6-xenU
 
 # we'll assume only one xen kernel at the moment of the installation
-ln -s $target/boot/vmlinuz-2.6.*-xen-amd64 $target/boot/vmlinuz-2.6-xenU
-ln -s $target/boot/initrd.img-2.6.*-xen-amd64 $target/boot/initrd.img-2.6-xenU
+ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-2.6-xenU
+ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-2.6-xenU
 
 ## Set up symlink /usr/lib/xen for quemu-dm (workaround)
-ln -s $target/usr/lib/xen-4.0 $target/usr/lib/xen
+ln -s $target/usr/lib/xen-4.1 $target/usr/lib/xen
 
 ## Set vnc master password if provided in postinst.conf
 echo "${vnc_cluster_password:=gntwin}" >$target/etc/ganeti/vnc-cluster-password
@@ -371,6 +371,12 @@ else
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 fi
 
+## set sci apt sources
+cp files/apt/sci-dev.list files/apt/apt.pub $target/etc/apt/sources.list.d
+cp files/apt/apt.pub $target/etc/apt
+chroot $target "apt-key add /etc/apt/apt.pub"
+
+
 ## Symlink gplpv.iso with signed windows drivers to /stuff/cdimages
 # this file can also be found in /media/sci/simple-cdd/gplpv.iso
 ln -s /media/sci/simple-cdd/gplpv.iso $target/stuff/cdimages/gplpv.iso
@@ -392,29 +398,6 @@ source=`pwd`
 
 mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
-
-## Add ganeti-instance-debootstrap hooks
-
-#mkdir -p $target/etc/ganeti/instance-debootstrap/hooks
-#test -d files/ganeti/instance-debootstrap/hooks && cp -r files/ganeti/instance-debootstrap/hooks/* $target/etc/ganeti/instance-debootstrap/hooks/
-
-## Add ganeti-instance-ubootstrap hooks
-
-#mkdir -p $target/etc/ganeti/instance-ubootstrap/hooks
-#test -d files/ganeti/instance-ubootstrap/hooks && cp -r files/ganeti/instance-ubootstrap/hooks/* $target/etc/ganeti/instance-ubootstrap/hooks/
-
-## Add ganeti-instance-debootstrap variants
-
-#mkdir -p $target/etc/ganeti/instance-debootstrap/variants
-#test -d files/ganeti/instance-debootstrap/variants && cp -r files/ganeti/instance-debootstrap/variants/* $target/etc/ganeti/instance-debootstrap/variants/
-#echo custom_variant >>$target/etc/ganeti/instance-debootstrap/variants.list
-
-## Add ganeti OS "windows" scripts (ntfsclone - based)
-
-cp -r files/os/windows $target/usr/share/ganeti/os/
-
-## Add SCI deploing scripts
-## Make LV names 'system-.*' ignored by ganeti
 
 cp files/sbin/* $target/usr/local/sbin/
 

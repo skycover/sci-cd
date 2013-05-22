@@ -40,19 +40,19 @@ exim4-daemon-heavy
 exim4-daemon-light
 
 # usbip
-libusbip-dev
-libusbip0
-usbip-source
-usbip
+#libusbip-dev
+#libusbip0
+#usbip-source
+#usbip
 
 # windows
 dosfstools
 
 # zabbix
-zabbix-agent
-zabbix-server-mysql
-zabbix-server-pgsql
-zabbix-frontend-php
+#zabbix-agent
+#zabbix-server-mysql
+#zabbix-server-pgsql
+#zabbix-frontend-php
 
 # proxy and webservers
 squid
@@ -78,15 +78,15 @@ php5-mcrypt
 php5-mysql
 php5-pgsql
 php5-pspell
-php5-suhosin
+#php5-suhosin
 
 # mysql
 libdbd-mysql-perl
-libmysqlclient16
-mysql-client-5.1
+libmysqlclient18
+mysql-client-5.5
 mysql-common
-mysql-server-5.1
-mysql-server-core-5.1
+mysql-server-5.5
+mysql-server-core-5.5
 
 # bacula
 bacula-common
@@ -115,12 +115,12 @@ slapd
 
 # postgresql
 postgresql
-postgresql-8.4
-postgresql-client-8.4
+postgresql-9.1
+postgresql-client-9.1
 postgresql-client-common
 postgresql-common
 postgresql-contrib
-postgresql-contrib-8.4
+postgresql-contrib-9.1
 
 # dovecot
 dovecot-common

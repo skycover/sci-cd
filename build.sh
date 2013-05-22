@@ -90,6 +90,10 @@ else
   awk '//{if(s)print}/#### INCLUDE PARTMAN ####/{print "#### PARTMAN INCLUDED ####"; s=1}' profiles/default.preseed.$profile.in >>profiles/default.preseed
 fi
 
+echo Building udeb for finish install hooks
+(cd src/sci-finish-install; fakeroot dpkg-buildpackage)
+cp src/sci-finish-install*.udeb local
+
 # Clone or pull the requested package from skycover on github
 # branch definition is global
 fetch(){

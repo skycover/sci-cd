@@ -25,7 +25,7 @@ d-i	localechooser/shortlist	select	US
 d-i	debian-installer/locale	select	en_US.UTF-8
 
 # set kernel version
-d-i base-installer/kernel/image string linux-image-2.6.32-5-xen-amd64
+d-i base-installer/kernel/image string linux-image-3.2.0-4-amd64
 
 d-i		clock-setup/utc boolean true
 clock-setup	clock-setup/ntp	boolean	false

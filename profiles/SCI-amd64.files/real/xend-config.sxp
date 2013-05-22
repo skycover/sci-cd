@@ -8,6 +8,7 @@
 (enable-dom0-ballooning no)
 (total_available_memory 0) 
 #(dom0-cpus 1)
+(vif-script vif2)
 
 (xend-relocation-server yes)
 (xend-relocation-port 8002)
