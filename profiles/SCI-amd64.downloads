@@ -47,10 +47,10 @@ usbip
 dosfstools
 
 # zabbix
-#zabbix-agent
-#zabbix-server-mysql
-#zabbix-server-pgsql
-#zabbix-frontend-php
+zabbix-agent
+zabbix-server-mysql
+zabbix-server-pgsql
+zabbix-frontend-php
 
 # proxy and webservers
 squid
