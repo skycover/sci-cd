@@ -40,10 +40,8 @@ exim4-daemon-heavy
 exim4-daemon-light
 
 # usbip
-#libusbip-dev
-#libusbip0
-#usbip-source
-#usbip
+libusbip-dev
+usbip
 
 # windows
 dosfstools
