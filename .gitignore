@@ -5,3 +5,5 @@ tmp
 usbkey
 local
 gplpv
+gitsrc
+src/chose-partman-recipe/debian/chose-partman-recipe.debhelper.log

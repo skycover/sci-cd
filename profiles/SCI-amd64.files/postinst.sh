@@ -186,7 +186,7 @@ cat <<EOF >>interfaces
 #        down brctl delbr xen-VLAN_NAME
 EOF
 
-cat interfaces >$ifs
+cat interfaces >$ifs.tmp
 
 ## Set up module loading (drbd, 8021q)
 
@@ -317,11 +317,11 @@ EOF
 ## Set up symlinks /boot/vmlinuz-2.6-xenU, /boot/initrd-2.6-xenU
 
 # we'll assume only one xen kernel at the moment of the installation
-ln -s $target/boot/vmlinuz-2.6.*-xen-amd64 $target/boot/vmlinuz-2.6-xenU
-ln -s $target/boot/initrd.img-2.6.*-xen-amd64 $target/boot/initrd.img-2.6-xenU
+ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-2.6-xenU
+ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-2.6-xenU
 
 ## Set up symlink /usr/lib/xen for quemu-dm (workaround)
-ln -s $target/usr/lib/xen-4.0 $target/usr/lib/xen
+ln -s $target/usr/lib/xen-4.1 $target/usr/lib/xen
 
 ## Set vnc master password if provided in postinst.conf
 echo "${vnc_cluster_password:=gntwin}" >$target/etc/ganeti/vnc-cluster-password
@@ -352,29 +352,6 @@ Acquire::cdrom::mount "/media/sci";
 APT::CDROM::NoMount;
 EOF
 
-## Set up ganeti-instance-debootstrap source to local SCI-CD image
-
-cat <<EOF >>$target/etc/default/ganeti-instance-debootstrap
-# For Ubuntu
-if [ "\$OS_NAME" = "ubootstrap" ]; then
-  CUSTOMIZE_DIR=/etc/ganeti/instance-ubootstrap/hooks
-  VARIANTS_DIR=/etc/ganeti/instance-ubootstrap/variants
-  MIRROR=http://us.archive.ubuntu.com/ubuntu/
-  SUITE=precise
-  EXTRA_PKGS="linux-image-virtual"
-elif [ "\$OS_NAME" = "debootstrap" ]; then
-  ARCH=amd64
-  EXTRA_PKGS="linux-image-xen-amd64"
-  if [ "\$OS_VARIANT" = "wheezy" ]; then
-    SUITE=wheezy
-	EXTRA_PKGS="linux-image-amd64"
-  else
-    MIRROR=file:/media/sci/
-    SUITE=squeeze
-  fi
-fi
-EOF
-
 ## Copy-in SCI-CD iso image to /stuff/cdimages, mount to /media/sci, set up sources.list
 
 # when installing from USB stick, two /cdrom mounts are shown
@@ -393,6 +370,12 @@ else
 	echo Unable to find CD-ROM device
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 fi
+
+## set sci apt sources
+cp files/apt/sci-dev.list files/apt/apt.pub $target/etc/apt/sources.list.d
+cp files/apt/apt.pub $target/etc/apt
+chroot $target "apt-key add /etc/apt/apt.pub"
+
 
 ## Symlink gplpv.iso with signed windows drivers to /stuff/cdimages
 # this file can also be found in /media/sci/simple-cdd/gplpv.iso
@@ -415,43 +398,6 @@ source=`pwd`
 
 mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
-
-## Add ganeti-instance-debootstrap hooks for pygrub and SCI-CD
-
-mkdir -p $target/etc/ganeti/instance-debootstrap/hooks
-cp -r files/ganeti/instance-debootstrap/hooks/* $target/etc/ganeti/instance-debootstrap/hooks/
-
-## Add ganeti-instance-debootstrap variant "sci"
-
-mkdir -p $target/etc/ganeti/instance-debootstrap/variants
-cp -r files/ganeti/instance-debootstrap/variants/* $target/etc/ganeti/instance-debootstrap/variants/
-echo sci >>$target/etc/ganeti/instance-debootstrap/variants.list
-echo wheezy >>$target/etc/ganeti/instance-debootstrap/variants.list
-
-## Add ganeti OS "windows" scripts (ntfsclone - based)
-
-cp -r files/os/windows $target/usr/share/ganeti/os/
-
-## Add ganeti OS "ubootstrap" scripts for Ubuntu debootstrap
-
-(cd $target/usr/share/debootstrap/scripts; ln -s gutsy precise)
-
-cp -r files/ganeti/instance-ubootstrap $target/etc/ganeti/
-(cd $target/etc/ganeti/instance-ubootstrap/hooks;
-for i in clear-root-password grub interfaces resolv; do
-  ln -s ../../instance-debootstrap/hooks/$i
-done
-)
-mkdir -p $target/usr/share/ganeti/os/ubootstrap
-(cd $target/usr/share/ganeti/os/ubootstrap
-for i in common.sh  create  export  ganeti_api_version  import  rename; do
-  ln -s ../debootstrap/$i
-done
-ln -s /etc/ganeti/instance-ubootstrap/variants.list
-)
-
-## Add SCI deploing scripts
-## Make LV names 'system-.*' ignored by ganeti
 
 cp files/sbin/* $target/usr/local/sbin/
 

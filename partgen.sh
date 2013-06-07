@@ -79,7 +79,7 @@ d-i partman-auto/expert_recipe string root ::	\\
 		format{ } use_filesystem{ } filesystem{ ext4 }	\\
 		mountpoint{ / }					\\
 	.							\\
-	2048 20 2048 linux-swap					\\
+	1024 20 1024 linux-swap					\\
 		\$lvmignore{ }					\\
 		\$primary{ } method{ swap } format{ }		\\
 EOF
@@ -159,7 +159,7 @@ d-i partman-auto/expert_recipe string multiraid ::	\\
 	10240 10 10240 raid			\\
 		\$primary{ } method{ raid }	\\
 	.					\\
-	2048 20 2048 raid			\\
+	1024 20 1024 raid			\\
 		\$primary{ } method{ raid }	\\
 EOF
   if [ -n "$partvar" ]; then

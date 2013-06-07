@@ -76,7 +76,7 @@ if [ -z "$disks" ]; then
   ./partgen.sh -d 4 -l 10 >src/chose-partman-recipe/d4l10.preseed
   ./partgen.sh -d 6 -l 10 >src/chose-partman-recipe/d6l10.preseed
   ./partgen.sh -d 8 -l 10 >src/chose-partman-recipe/d8l10.preseed
-  (cd src/chose-partman-recipe; dpkg-buildpackage)
+  (cd src/chose-partman-recipe; fakeroot dpkg-buildpackage)
   mkdir -p local
   cp src/chose-partman-recipe*.udeb local
   test -d tmp/mirror && (cd tmp/mirror; reprepro remove squeeze chose-partman-recipe)
@@ -90,18 +90,45 @@ else
   awk '//{if(s)print}/#### INCLUDE PARTMAN ####/{print "#### PARTMAN INCLUDED ####"; s=1}' profiles/default.preseed.$profile.in >>profiles/default.preseed
 fi
 
-# Prepare puppet modules as git repository with github upstream
+echo Building udeb for finish install hooks
+(cd src/sci-finish-install; fakeroot dpkg-buildpackage)
+cp src/sci-finish-install*.udeb local
 
-puppet_dir=profiles/$profile.files/files/root/puppet
-if [ -d $puppet_dir/.git ]; then
-  echo Pull sci-puppet
-  # We will prefetch the desired branch in the case it was not exists upon previous clone
-  (cd $puppet_dir; git fetch origin $branch; git checkout $branch; git pull)
-else
-  echo Clone sci-puppet
-  git clone https://github.com/skycover/sci-puppet.git $puppet_dir
-  (cd $puppet_dir; git checkout $branch)
-fi
+# Clone or pull the requested package from skycover on github
+# branch definition is global
+fetch(){
+  pkg=$1
+  pkg_dir=$2
+  if [ -d $pkg_dir/.git ]; then
+    echo Pull $pkg
+    # We will prefetch the desired branch in the case it was not exists upon previous clone
+    (cd $pkg_dir; git fetch origin $branch; git checkout $branch; git pull)
+  else
+    echo Clone $pkg
+    git clone https://github.com/skycover/$pkg.git $pkg_dir
+    (cd $pkg_dir; git checkout $branch)
+  fi
+}
+
+exitmsg(){
+  echo $*
+  exit 1
+}
+
+echo Building extended ganeti-instance-debootstrap package
+
+mkdir -p gitsrc
+debd=gitsrc/ganeti-instance-debootstrap
+fetch ganeti-instance-debootstrap $debd
+
+(cd $debd && dpkg-buildpackage -b -rfakeroot)
+mkdir -p local
+cp $debd*.deb local || exitmsg "No SCI edition ganeti-instance-debootstrap package. Aborting."
+test -d tmp/mirror && (cd tmp/mirror; reprepro remove squeeze ganeti-instance-debootstrap)
+
+echo Preparing puppet modules as git repository with github upstream
+
+fetch sci-puppet profiles/$profile.files/files/root/puppet
 
 # Prepare gplpv.iso for Windows instances
 # Note: -t supress repeated download if something already exists in gplpv/univention

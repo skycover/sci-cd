@@ -289,7 +289,7 @@ gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LA
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
-gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.0/bin/pygrub,use_bootloader=True,bootloader_args='',root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-2.6-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 if [ -n "$NODE2_IP" ]; then

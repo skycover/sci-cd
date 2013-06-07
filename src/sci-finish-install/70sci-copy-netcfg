@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mv /target/etc/network/interfaces.tmp /target/etc/network/interfaces
