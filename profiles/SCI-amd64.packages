@@ -4,7 +4,7 @@ xen-hypervisor-4.1-amd64
 firmware-linux
 xen-utils-4.1
 xenstore-utils
-#xen-qemu-dm-4.0
+qemu
 drbd8-utils
 vlan
 bridge-utils
