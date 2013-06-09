@@ -1,5 +1,4 @@
 # kernel
-linux-image-xen-amd64
 firmware-qlogic
 firmware-bnx2
 firmware-bnx2x
@@ -8,7 +7,6 @@ firmware-realtek
 # mandatory stuff
 puppetmaster
 sudo
-less
 
 iproute
 
@@ -16,6 +14,8 @@ bind9
 dnsutils
 
 isc-dhcp-server
+
+iptables-persistent
 
 approx
 
@@ -53,15 +53,21 @@ zabbix-server-pgsql
 zabbix-frontend-php
 
 # proxy and webservers
-squid
+squid3
+squidguard
 nginx
+
+# traffic statistics
+lightsquid
+bandwidthd
 
 # apache2
 apache2
 apache2-mpm-prefork
+apache2-mpm-worker
 apache2-utils
-apache2-bin
-apache2-common
+apache2.2-bin
+apache2.2-common
 
 # php5
 libapache2-mod-php5
@@ -71,12 +77,13 @@ php5-common
 php5-curl
 php5-gd
 php5-imap
+php5-intl
 php5-ldap
 php5-mcrypt
 php5-mysql
 php5-pgsql
 php5-pspell
-#php5-suhosin
+php5-fpm
 
 # mysql
 libdbd-mysql-perl
@@ -127,3 +134,7 @@ dovecot-pop3d
 
 # partition utils
 parted
+
+# videoserver
+zoneminder
+
