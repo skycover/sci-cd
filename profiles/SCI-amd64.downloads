@@ -27,6 +27,7 @@ links
 nmap
 zsh
 genisoimage
+pwgen
 
 # various stuff
 console-cyrillic
