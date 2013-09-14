@@ -79,7 +79,7 @@ if [ -z "$disks" ]; then
   (cd src/chose-partman-recipe; fakeroot dpkg-buildpackage)
   mkdir -p local
   cp src/chose-partman-recipe*.udeb local
-  test -d tmp/mirror && (cd tmp/mirror; reprepro remove squeeze chose-partman-recipe)
+  test -d tmp/mirror && (cd tmp/mirror; reprepro remove wheezy chose-partman-recipe)
 else
 
   echo Auto apply single user-predefined layout
@@ -124,7 +124,7 @@ fetch ganeti-instance-debootstrap $debd
 (cd $debd && dpkg-buildpackage -b -rfakeroot)
 mkdir -p local
 cp $debd*.deb local || exitmsg "No SCI edition ganeti-instance-debootstrap package. Aborting."
-test -d tmp/mirror && (cd tmp/mirror; reprepro remove squeeze ganeti-instance-debootstrap)
+test -d tmp/mirror && (cd tmp/mirror; reprepro remove wheezy ganeti-instance-debootstrap)
 
 echo Preparing puppet modules as git repository with github upstream
 
