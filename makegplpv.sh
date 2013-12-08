@@ -10,8 +10,8 @@ usage: ./makegplpv.sh [-n|-t]
 EOF
   exit
 fi
-mkdir -p gplpv/univention
-cd gplpv/univention
-test "$1" = "-n" || test "$1" = "-t" -a -n "$(ls -A)" ||  wget -r --no-parent -l1 -nd http://apt.univention.de/download/addons/gplpv-drivers/
+mkdir -p gplpv/meadowcourt
+cd gplpv/meadowcourt
+test "$1" = "-n" || test "$1" = "-t" -a -n "$(ls -A)" ||  wget -r --no-parent -l1 -nd http://www.meadowcourt.org/downloads/
 cd ..
-genisoimage -o gplpv.iso -R -J -hfs univention
+genisoimage -o gplpv.iso -R -J -hfs meadowcourt
