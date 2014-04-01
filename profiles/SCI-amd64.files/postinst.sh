@@ -55,7 +55,7 @@ update-grub
 grub_file=$target/etc/default/grub
 if [ -f $grub_file ]; then
  echo Configuring GRUB 
- ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=512M"'
+ ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=1536M"'
  # XXX there is no setting separately for xenkopt
  # XXX with nosmp md raid is not loading with hypervisor menuentry
  #echo 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nosmp"' >>$grub_file
