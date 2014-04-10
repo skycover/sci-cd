@@ -197,7 +197,7 @@ echo 8021q >>$target/etc/modules
 
 ## Allow plugins and facts syncing for puppet
 echo Editing puppet.conf
-echo "pluginsync = true" >>$target/etc/puppet/puppet.conf
+sed -i '/\[main\]/ a\pluginsync = true' $target/etc/puppet/puppet.conf
 
 ## Enable puppet to start
 
