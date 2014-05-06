@@ -7,4 +7,5 @@ if [ "$GANETI_MASTER" = "`hostname`" ]; then
   cat /root/.ssh/tmp_hosts > /root/.ssh/known_hosts
   # deploy files
   scp /etc/ganeti/networks $GANETI_NODE_NAME:/etc/ganeti/networks
+  scp /etc/ganeti/vnc-cluster-password $GANETI_NODE_NAME:/etc/ganeti/networks
 fi

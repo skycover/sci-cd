@@ -314,18 +314,14 @@ options bnx2x disable_tpa=1
 options usbcore autosuspend=-1
 EOF
 
-## Set up symlinks /boot/vmlinuz-2.6-xenU, /boot/initrd-2.6-xenU
+## Set up symlinks /boot/vmlinuz-3-xenU, /boot/initrd-3-xenU
 
 # we'll assume only one xen kernel at the moment of the installation
-ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-2.6-xenU
-ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-2.6-xenU
+ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-3-xenU
+ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-3-xenU
 
 ## Set up symlink /usr/lib/xen for quemu-dm (workaround)
 ln -s $target/usr/lib/xen-4.1 $target/usr/lib/xen
-
-## Set vnc master password if provided in postinst.conf
-echo "${vnc_cluster_password:=gntwin}" >$target/etc/ganeti/vnc-cluster-password
-chmod 600 $target/etc/ganeti/vnc-cluster-password
 
 if [ ! -f /proc/mounts ]; then
 	echo Warning: /proc is not mounted. Trying to fix.
@@ -388,11 +384,6 @@ mkdir $target/stuff/export
 
 test -n "$proc_mounted" && umount /proc
 umount /stuff
-
-## Patch ganeti for viridian option
-
-source=`pwd`
-(cd $target/usr/share/pyshared/ganeti; patch -p1 <$source/patch/ganeti-2.5.0-viridian.patch)
 
 ## Add ganeti hooks if any
 

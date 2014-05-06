@@ -14,8 +14,10 @@ locales
 vim
 less
 puppet
-ganeti2
-ganeti-htools
+ganeti
+ganeti-2.10
+ganeti-htools-2.10
+ganeti-haskell-2.10
 ganeti-instance-debootstrap
 smartmontools
 hdparm
@@ -39,3 +41,4 @@ mc
 usbmount
 console-setup
 chrony
+pwgen

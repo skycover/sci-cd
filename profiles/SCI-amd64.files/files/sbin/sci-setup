@@ -280,6 +280,12 @@ elif [ -n "$SCI_LAN_IP" ]; then
   echo $fnx $SCI_LAN_GATEWAY >>/etc/ganeti/networks 
 fi
 
+vncpasswd=`pwgen -1`
+echo "Set random vnc password for cluster: $vncpasswd"
+echo $vncpasswd > /etc/ganeti/vnc-cluster-password
+chmod 640 /etc/ganeti/vnc-cluster-password
+chgrp gnt-daemons /etc/ganeti/vnc-cluster-password
+
 echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
@@ -289,7 +295,7 @@ gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LA
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 echo Tuning cluster
-gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-2.6-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-3-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 if [ -n "$NODE2_IP" ]; then
@@ -327,7 +333,7 @@ EOF
  exit 1
 fi
 
-MASTER_NETDEV=`gnt-cluster info|awk '/- master netdev:/{print $NF; exit 0}'`
+MASTER_NETDEV=`gnt-cluster info|awk '/master netdev:/{print $NF; exit 0}'`
 LAN_NETDEV=`gnt-cluster info|awk '/^Default nic parameters:/{s=1}/ *link: /{if(s){print $NF; exit 0}}'`
 if [ "$NODE1_NETDEV" != "$LAN_NETDEV" ]; then
   LANIF="--net=1:link=$LAN_NETDEV"
