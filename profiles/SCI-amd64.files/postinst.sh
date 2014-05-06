@@ -370,7 +370,7 @@ fi
 ## set sci apt sources
 cp files/apt/sci-dev.list $target/etc/apt/sources.list.d
 cp files/apt/apt.pub $target/etc/apt
-chroot $target "apt-key add /etc/apt/apt.pub"
+apt-key add /etc/apt/apt.pub
 
 
 ## Symlink gplpv.iso with signed windows drivers to /stuff/cdimages
