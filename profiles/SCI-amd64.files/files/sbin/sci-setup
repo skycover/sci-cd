@@ -365,10 +365,10 @@ test -n "$LANIF" && echo Second network device: $LAN_NETDEV
 test -n "$SCI_LAN_IP" && echo Second network IP: $SCI_LAN_IP
 
 if [ -n "$NODE2_NAME" ]; then
-  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV $LANIF -n $NODE1_NAME:$NODE2_NAME $SCI_NAME
+  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME:$NODE2_NAME --no-name-check --no-ip-check $SCI_NAME
 else
   echo "WARNING! Creating the service instance without fallback support. This is strongly not recommended for production use!"
-  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV $LANIF -n $NODE1_NAME $SCI_NAME
+  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME --no-name-check --no-ip-check $SCI_NAME
 fi
 
 ;;
