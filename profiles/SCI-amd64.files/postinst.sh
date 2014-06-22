@@ -380,7 +380,7 @@ ln -s /media/sci/simple-cdd/gplpv.iso $target/stuff/cdimages/gplpv.iso
 ## Link /var/lib/ganeti/export to /stuff/export
 
 mkdir $target/stuff/export
-(cd $target/var/lib/ganeti && ln -s $target/stuff/export)
+echo "/stuff/export   /var/lib/ganeti/export ext4 bind 0 0" >> $target/etc/fstab
 
 test -n "$proc_mounted" && umount /proc
 umount /stuff
