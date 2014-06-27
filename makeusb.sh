@@ -30,6 +30,13 @@ syslinux ${d}1
 install-mbr $d
 mount ${d}1 "$target"
 cp initrd.gz vmlinuz "$target"
-echo "default vmlinuz" > "$target"/syslinux.cfg
-grep append ../tmp/cd-build/wheezy/boot1/isolinux/txt.cfg | head -1 | sed -e 's/^\t//' -e 's/ initrd=[^ ]*/ initrd=initrd.gz/' >>"$target"/syslinux.cfg
+cat << EOF > "$target"/syslinux.cfg
+default install 
+label install
+    menu label ^Install
+    menu default
+    kernel vmlinuz
+    append  debian-installer/locale=en_US console-setup/layoutcode=us console-keymaps-at/keymap=us localechooser/translation/warn-light=true localechooser/translation/warn-severe=true keyboard-configuration/xkb-keymap=us debian-installer/locale=en_US console-setup/layoutcode=us console-keymaps-at/keymap=us localechooser/translation/warn-light=true localechooser/translation/warn-severe=true keyboard-configuration/xkb-keymap=us preseed/file=/cdrom/simple-cdd/default.preseed vga=788 initrd=initrd.gz -- quiet
+EOF
+
 echo "Now you can copy any *.iso image directly to usb filesystem (currently mounted on \"$target\")"
