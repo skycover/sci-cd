@@ -364,6 +364,11 @@ EOF
 test -n "$LANIF" && echo Second network device: $LAN_NETDEV
 test -n "$SCI_LAN_IP" && echo Second network IP: $SCI_LAN_IP
 
+# check /media/sci existance
+if ! [ -d /media/sci/pool/main ]; then
+  echo "WARNING! Can't find apt repo in /media/sci. You will not be able to create instances without internet connection!"
+fi
+
 if [ -n "$NODE2_NAME" ]; then
   gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME:$NODE2_NAME --no-name-check --no-ip-check $SCI_NAME
 else
