@@ -11,8 +11,9 @@
 # In the case of the power off and then the node restart,
 # it will up in the normal state without any intervention.
 
-/etc/init.d/ganeti shutdown
+/etc/init.d/ganeti stop
 
-xm list|awk '//{if(NR>2)print "xm shutdown "$1"&; sleep 15"}'|sh
+/etc/init.d/xendomains stop
+#xm list|awk '//{if(NR>2)print "xm shutdown "$1"&; sleep 15"}'|sh
 # this trick need to be confirmed
 #sync;sync;mount -o remount,ro /

@@ -42,3 +42,6 @@ usbmount
 console-setup
 chrony
 pwgen
+nut
+nut-server
+nut-client
