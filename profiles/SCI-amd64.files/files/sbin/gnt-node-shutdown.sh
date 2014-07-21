@@ -14,6 +14,3 @@
 /etc/init.d/ganeti stop
 
 /etc/init.d/xendomains stop
-#xm list|awk '//{if(NR>2)print "xm shutdown "$1"&; sleep 15"}'|sh
-# this trick need to be confirmed
-#sync;sync;mount -o remount,ro /

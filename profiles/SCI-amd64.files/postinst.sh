@@ -396,6 +396,7 @@ cp files/sbin/* $target/usr/local/sbin/
 cp files/nut/* $target/etc/nut
 chown root:nut $target/etc/nut/*
 chmod 640 $target/etc/nut/*
+echo "%nut    ALL=NOPASSWD: /usr/local/sbin/gnt-node-shutdown.sh" >> $target/etc/sudoers
 
 # Write motd
 cat <<EOF >$target/etc/motd
