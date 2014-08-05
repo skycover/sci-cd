@@ -6,7 +6,6 @@ firmware-realtek
 
 # mandatory stuff
 puppetmaster
-sudo
 
 iproute
 
