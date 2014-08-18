@@ -298,7 +298,6 @@ cat <<EOF >$target/etc/sysctl.d/sci.conf
 
 # add disk tuning options to avoid (or reduce?) deadlocks
 # gives better latency on heavy load
-vm.swappiness = 0
 vm.overcommit_memory = 1
 vm.dirty_background_ratio = 5
 vm.dirty_ratio = 10
