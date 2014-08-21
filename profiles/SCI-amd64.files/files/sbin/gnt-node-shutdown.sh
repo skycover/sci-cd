@@ -11,6 +11,8 @@
 # In the case of the power off and then the node restart,
 # it will up in the normal state without any intervention.
 
+/etc/init.d/ganeti-watcher stop
+sleep 10
 /etc/init.d/ganeti stop
 
 /etc/init.d/xendomains stop
