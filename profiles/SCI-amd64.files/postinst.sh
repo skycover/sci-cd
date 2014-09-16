@@ -188,10 +188,11 @@ EOF
 
 cat interfaces >$ifs.tmp
 
-## Set up module loading (drbd, 8021q)
+## Set up module loading (drbd, 8021q, loop)
 
 echo Setting up modules
 echo options drbd minor_count=128 usermode_helper=/bin/true disable_sendpage=1 >>$target/etc/modprobe.d/drbd.conf
+echo options loop max_loop=64 >>$target/etc/modprobe.d/local-loop.conf
 echo drbd >>$target/etc/modules
 echo 8021q >>$target/etc/modules
 
