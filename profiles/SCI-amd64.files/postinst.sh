@@ -398,13 +398,18 @@ chown root:nut $target/etc/nut/*
 chmod 640 $target/etc/nut/*
 echo "%nut    ALL=NOPASSWD: /usr/local/sbin/gnt-node-shutdown.sh" >> $target/etc/sudoers
 
-# Write motd
+## Write motd
 cat <<EOF >$target/etc/motd
 
 SkyCover Infrastructure high availability cluster node, ver. $VERSION
 For more information see http://redmine.skycover.ru/projects/sci-cd
 
 EOF
+
+## Set chrony reboot if there is no sources
+
+echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin' >> $target/etc/cron.d/chrony
+echo '*/10 * * * *	root	chronyc sourcestats|grep -q "^210 Number of sources = 0" && service chrony restart' >> $target/etc/cron.d/chrony
 
 ## Filling SCI configuration template
 
