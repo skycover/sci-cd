@@ -261,11 +261,13 @@ cat <<EOFF >$target/etc/rc.sci
 # On-boot configuration for hardware for better cluster performance
 # mostly http://code.google.com/p/ganeti/wiki/PerformanceTuning
 
+# If you use hardware raid or external FC/Infiniband storage, you prorably would rather use noop scheduler instead of deadline
+
 # rise priority for dom0, alowing drbd to work fine
 xm sched-credit -d0 -w512
 
 modprobe sg
-disks=\`sg_map -i|awk '{if(\$3=="ATA"){print substr(\$2, length(\$2))}}'\`
+disks=\`sg_map -i|awk '{print substr(\$2, length(\$2))}'\`
 for i in \$disks; do
   # Set value if you want to use read-ahead
   ra="$read_ahead"
