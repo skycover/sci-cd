@@ -298,6 +298,11 @@ echo Tuning cluster
 gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-3-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
 test $? -eq 0 || (echo Something wrong; exit 1)
 
+# tuning lvm filter. if you don't use md, comment it
+if (pvs|grep xenvg|grep -q md) then
+        sed -i 's/filter = \[ \"a\/\.\*\/\" \]/filter = \[ \"a\/md\/\"\, \"r\/\.\*\/\" \]/' /etc/lvm/lvm.conf
+fi
+
 if [ -n "$NODE2_IP" ]; then
  echo Adding the second node
  if [ -n "$NODE2_SAN_IP" ]; then
