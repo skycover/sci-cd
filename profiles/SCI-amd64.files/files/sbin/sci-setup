@@ -286,6 +286,9 @@ echo $vncpasswd > /etc/ganeti/vnc-cluster-password
 chmod 640 /etc/ganeti/vnc-cluster-password
 chgrp gnt-daemons /etc/ganeti/vnc-cluster-password
 
+echo add sci repo in apt sources
+mv /root/sci-dev.list /etc/apt/sources.list.d
+
 echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
