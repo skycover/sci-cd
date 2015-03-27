@@ -46,3 +46,8 @@ nut
 nut-server
 nut-client
 sudo
+screen
+tcpdump
+ethtool
+iperf
+ifenslave-2.6
