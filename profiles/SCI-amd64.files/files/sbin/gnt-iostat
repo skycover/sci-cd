@@ -1,0 +1,132 @@
+#!/bin/bash
+workdir="/var/lib/ganeti"
+#workdir="/home/arkhipovis"
+#configfile="$workdir/config.data.new"
+configfile="$workdir/config.data"
+configfile_obr="/tmp/config.data.new"
+
+function get_struct_fromconfigfile {
+	# 1 - inbox file
+	cat $1 | sed 's/,/,\n/g' | awk 'BEGIN {
+		tabs=0
+	} {
+		for ( i=0 ; i <= tabs ; i++ ) printf ("\t")
+		print $0
+		tabs=tabs+gsub(/[{\[]/,"")
+		tabs=tabs-gsub(/[}\]]/,"")
+	}'
+}
+
+function get_node_uid {
+	cat $configfile_obr | awk -v  node_name="$1" '
+		BEGIN {
+			this_node=0
+		} {
+			if ( $0 ~ "\"nodes\":") nodes=1
+			if ( nodes == 1 ) {
+				if ( $0 ~ node_name ) this_node=1
+				if  ( ( $0 ~ "uuid" ) && ( this_node == 1 ) ) {
+					print $0
+					this_node=0
+				}
+			}
+		}
+	' | grep -oE "[a-f0-9-]{36}"
+}
+
+function get_instances {
+	cat $configfile_obr | awk -v node=$node_uuid '
+		BEGIN {
+			FS="[\":,]+"
+		}	{
+			if ( $0 ~ "\"instances\":") instances++
+			if ( $0 ~ "\"name\":" ) {
+				name=$4
+			}
+			if ( $0 ~ "\"primary_node\":" && $0 ~ node ) print name
+		}
+	'
+}
+
+function get_instance_disks {
+	instance_name=$1	
+	cat $configfile_obr | awk -v instance_name=$instance_name -v node=$node_uuid '
+		BEGIN {
+			FS="[\":,]+"
+		}	{
+			if ( $0 ~ "\"instances\":") instances++
+			if ( $0 ~ "name" && $(NF-1) == instance_name ) this_instance=1
+			if ( this_instance == 1 ) {
+				if ( $0 ~ "[a-f0-9-]{36}.disk[0-9]+" && $0 !~ "_meta" ) print group,$2
+				if ( $0 ~ "logical_id" ) {
+					group=$(NF-1)
+				}
+			}
+			if ( $0 ~ node && $0 ~ "primary_node" ) this_instance=0
+		}
+	' 
+	# | grep -oE "[a-f0-9-]{36}.disk[0-9]+_data" | sort | uniq
+}
+
+function get_vgdisk_dm {
+	# 1- disk group
+	# 2 - didk uuid
+	echo  $(ls -l "/dev/$1/$2" | awk -F"[.\\\/]" '{print $NF}')
+}
+
+# get structured file
+get_struct_fromconfigfile $configfile > $configfile_obr
+node_uuid=$(get_node_uid $HOSTNAME)
+# define wks > disk > dm
+get_instances | while read i; do 
+	get_instance_disks "$i" | while read j;do
+		echo $i $j $(get_vgdisk_dm $j)
+	done
+done | awk '
+	{
+		printf("%s_",$1)
+		split($3,disk,"[._]")
+		printf("%s /dev/%s/%s %s\n",disk[2],$2,$3,$4)
+	}
+' > /tmp/dm2inst.list
+disks_count=$(cat /tmp/dm2inst.list | wc -l)
+[[ $disks_count == 0 ]] && {
+	echo "on this node was not found runned instance"
+	exit 
+}
+iostat $* |  awk -v disks_count=$disks_count ' /^dm-/ {
+		while ((getline l < "/tmp/dm2inst.list")>0){
+			split(l,s," ")
+			if ($1==s[3]) {
+				$1=s[1]
+				gsub(/,/,".")
+				for ( i=2 ; i<=6 ; i++) sum[i]+=$(i)
+				printf("%-30s %9s %9s %9s %12s %12s \n",$1,$2,$3,$4,$5,$6)
+				disk_printed++
+			}
+		}
+        close("/tmp/dm2inst.list")
+	}
+	/^avg-cpu/ {
+		system("clear")
+		print $0
+	} /^Device/ {
+		printf("%-30s %9s %9s %9s %12s %12s \n","Disk:","tps","kB_read/s","kB_wrtn/s","kB_read","kB_wrtn")
+		print "======================================================================================"
+	} /^[[:space:]]/ {
+		print $0
+	} {
+		if ( disk_printed == disks_count ) {
+			printf("%-30s ", "TOTAL")
+			for ( i=2 ; i<=4; i++ ) {
+				printf("%9.2f ",sum[i])
+				sum[i]=0
+			}
+			for ( i=5 ; i<=6; i++ ) {
+				printf("%12s ",sum[i])
+				sum[i]=0
+			}
+			disk_printed=0
+			printf("\n")
+		}
+	}'

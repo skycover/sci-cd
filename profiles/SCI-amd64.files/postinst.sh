@@ -392,6 +392,7 @@ umount /stuff
 mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
 
+## Add custom scripts to local/sbin
 cp files/sbin/* $target/usr/local/sbin/
 
 ## Add nut configs
