@@ -381,7 +381,8 @@ ln -s /media/sci/simple-cdd/gplpv.iso $target/stuff/cdimages/gplpv.iso
 
 ## Link /var/lib/ganeti/export to /stuff/export
 
-mkdir $target/stuff/export
+mkdir -p $target/var/lib/ganeti/export
+mkdir -p $target/stuff/export
 echo "/stuff/export   /var/lib/ganeti/export ext4 bind 0 0" >> $target/etc/fstab
 
 test -n "$proc_mounted" && umount /proc
@@ -400,6 +401,7 @@ cp files/nut/* $target/etc/nut
 chown root:nut $target/etc/nut/*
 chmod 640 $target/etc/nut/*
 echo "%nut    ALL=NOPASSWD: /usr/local/sbin/gnt-node-shutdown.sh" >> $target/etc/sudoers
+update-rc.d nut-client remove
 
 ## Write motd
 cat <<EOF >$target/etc/motd
