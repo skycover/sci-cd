@@ -1,0 +1,111 @@
+#!/bin/bash
+
+usage() {
+	echo "$0 [part of username] [--file=[part of full path to file]]"
+	exit 1
+}
+
+function get_wksname {
+	if [[ -z  $(host $1 | awk '{ if (NR>1) print $NF}') ]];then
+		echo $1
+	else
+		echo  $(host $1 | awk '{ if (NR>1) print $NF}')
+	fi
+}
+
+function user2wks {
+	printf "%-15s %-25s \n" "Username" "Wks"
+	echo ====================================
+	eval $(smbstatus -p | awk -v user=$1 -F"[ \t:]+" ' $1~/[0-9]+/ {
+		if ( $2 ~ user ) {
+			i++
+			printf("u_pid[%s]=%s;",i,$1)
+			printf("u_user[%s]=%s;",i,$2)
+			printf("u_ip[%s]=%s;\n",i,$(NF-1))
+		}
+	}')
+	for (( i=1; i<=${#u_pid[*]}; i++ ));do
+		printf '%-15s %-25s \n' ${u_user[i]} $(get_wksname ${u_ip[i]})
+	done
+}
+
+function get_opened {
+	echo -e "Files opened by $(pid2user $1)"
+	smbstatus -L | awk -v pid=$1 '{
+		if ( ( $1 == pid ) && ( $8 != ".") ) {
+			i++
+			file[i]=$8
+			for ( j=9; j<=NF-6 ; j++ ) {
+				file[i]=file[i]" "$(j)
+			}
+			printf("%s\n",file[i])
+		}
+	}'
+}
+
+function pid2user {
+	smbstatus -p | awk -v pid=$1 'BEGIN {
+		FS="[ \t:]+"
+	}{
+		if ($1==pid)printf("%s\n",$2)
+	}'
+}
+
+function pid2ip {
+        smbstatus -p | awk -v pid=$1 'BEGIN {
+                FS="[ \t:]+"
+        } {
+                if ($1==pid) printf("%s\n",$(NF-1))
+        }'
+}
+
+function file2pid {
+	smbstatus -L | awk 'BEGIN {
+		FS="[ \t]+"
+	} {
+		if ($1~"[0-9]+" && $8!=".") {
+			printf("%s |",$1)
+			for (i=8;i<=NF-5;i++) printf(" %s",$i)
+			printf("\n")
+		}
+	}' | uniq | sort | grep -i "$1"
+}
+
+function get_files {
+	printf "%-15s %-25s %s \n" "Username" "Wks" " Opened file"
+	echo =========================================================
+	eval $(file2pid $1 | awk 'BEGIN {
+			FS="[|]+"
+		} {
+			i++
+			printf("f_pid[%s]=%s;\n",i,$1)
+			printf("f_file[%s]=\"%s\";\n",i,$2)
+		}')
+	for (( i=1; i<=${#f_pid[*]}; i++ )); do
+		printf '%-15s %-25s %s \n' $(pid2user ${f_pid[i]}) $(get_wksname $(pid2ip ${f_pid[i]})) "${f_file[i]}"
+	done
+}
+
+#get_pid_and_wks $1
+#for (( i=1; i<=${#pid[*]} ; i++ )) ; do
+#	wksname[$i]=$(get_wksname ${ip[i]})
+#	echo ${pid[i]} ${user[i]} ${ip[i]} ${wksname[i]}
+#	#get_opened ${pid[i]}
+#done
+[[ -z $* ]] && usage
+while [ $# -gt 0 ];do
+	case "$1" in
+		+f)
+			fs=1
+			;;
+		--file=*)
+			f="$(echo $1 | sed 's/^--file=//1')"
+			get_files $f
+			unset f
+			;;
+		*)
+			user2wks $1 | uniq
+	esac
+	shift
+done
+
