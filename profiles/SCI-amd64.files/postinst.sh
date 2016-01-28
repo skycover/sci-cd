@@ -229,6 +229,10 @@ sed -i '/\/media\/usb0/d' $target/etc/fstab
 
 cp files/default/* $target/etc/default/
 
+## Set yum repos for CentOS 7
+
+cp files/base.repo $target/etc/yum/repos.d/
+
 ## Add startup script rc.sci to setup performance
 
 # a bit ugly, but fast ;)
@@ -392,6 +396,9 @@ umount /stuff
 
 mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
+
+## Set proper sci instance name for stages.conf
+sed -i "s/sci/sci.$domain/" $target/etc/ganeti/stages.conf
 
 ## Add custom scripts to local/sbin
 cp files/sbin/* $target/usr/local/sbin/

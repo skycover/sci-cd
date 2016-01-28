@@ -300,7 +300,7 @@ test $? -eq 0 || (echo Something wrong; exit 1)
 echo Tuning cluster
 gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-3-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
 test $? -eq 0 || (echo Something wrong; exit 1)
-gnt-cluster modify --ipolicy-bounds-specs=min:disk-size=0,cpu-count=1,disk-count=0,memory-size=1,nic-count=0,spindle-use=0/max:disk-size=4194304,cpu-count=128,disk-count=32,memory-size=1048576,nic-count=32,spindle-use=12
+gnt-cluster modify --ipolicy-bounds-specs=min:disk-size=0,cpu-count=1,disk-count=0,memory-size=1,nic-count=0,spindle-use=0/max:disk-size=4192256,cpu-count=128,disk-count=32,memory-size=1048576,nic-count=32,spindle-use=12
 test $? -eq 0 || (echo Something wrong; exit 1)
 
 # tuning lvm filter. if you don't use md, comment it

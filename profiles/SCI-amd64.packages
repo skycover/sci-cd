@@ -51,3 +51,4 @@ tcpdump
 ethtool
 iperf
 ifenslave-2.6
+yum
