@@ -423,6 +423,9 @@ EOF
 echo 'PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin' >> $target/etc/cron.d/chrony
 echo '*/10 * * * *	root	chronyc sourcestats|grep -q "^210 Number of sources = 0" && service chrony restart' >> $target/etc/cron.d/chrony
 
+## Set DRBD resync speed auto adjustment
+echo '* * * * *    root    /usr/local/sbin/drbd-sync-rate' >> $target/etc/cron.d/drbd-sync-rate
+
 ## Filling SCI configuration template
 
 mkdir $target/etc/sci
