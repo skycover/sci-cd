@@ -115,17 +115,6 @@ exitmsg(){
   exit 1
 }
 
-echo Building extended ganeti-instance-debootstrap package
-
-mkdir -p gitsrc
-debd=gitsrc/ganeti-instance-debootstrap
-fetch ganeti-instance-debootstrap $debd
-
-(cd $debd && dpkg-buildpackage -b -rfakeroot)
-mkdir -p local
-cp $debd*.deb local || exitmsg "No SCI edition ganeti-instance-debootstrap package. Aborting."
-test -d tmp/mirror && (cd tmp/mirror; reprepro remove wheezy ganeti-instance-debootstrap)
-
 echo Preparing puppet modules as git repository with github upstream
 
 fetch sci-puppet profiles/$profile.files/files/root/puppet
