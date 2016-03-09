@@ -209,6 +209,10 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
+## Reduce XENDOMAINS_STOP_MAXWAIT to 90
+
+./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_STOP_MAXWAIT=300" 'XENDOMAINS_STOP_MAXWAIT=90'
+
 ## Enable smartd to start
 
 ./strreplace.sh $target/etc/default/smartmontools "^#start_smartd=yes" "start_smartd=yes"
@@ -398,7 +402,7 @@ mkdir -p $target/etc/ganeti/hooks
 cp -r files/ganeti/hooks $target/etc/ganeti/
 
 ## Set proper sci instance name for stages.conf
-sed -i "s/sci/sci.$domain/" $target/etc/ganeti/stages.conf
+#sed -i "s/sci/sci.$domain/" $target/etc/ganeti/stages.conf
 
 ## Add custom scripts to local/sbin
 cp files/sbin/* $target/usr/local/sbin/

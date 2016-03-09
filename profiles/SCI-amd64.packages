@@ -15,9 +15,9 @@ vim
 less
 puppet
 ganeti
-ganeti-2.10
-ganeti-htools-2.10
-ganeti-haskell-2.10
+ganeti-2.11
+ganeti-htools-2.11
+ganeti-haskell-2.11
 ganeti-instance-debootstrap
 smartmontools
 hdparm
