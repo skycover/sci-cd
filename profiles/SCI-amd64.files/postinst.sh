@@ -209,10 +209,6 @@ echo Setting up defaults
 
 ./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_SAVE" 'XENDOMAINS_SAVE=""'
 
-## Reduce XENDOMAINS_STOP_MAXWAIT to 90
-
-./strreplace.sh $target/etc/default/xendomains "^XENDOMAINS_STOP_MAXWAIT=300" 'XENDOMAINS_STOP_MAXWAIT=90'
-
 ## Enable smartd to start
 
 ./strreplace.sh $target/etc/default/smartmontools "^#start_smartd=yes" "start_smartd=yes"
