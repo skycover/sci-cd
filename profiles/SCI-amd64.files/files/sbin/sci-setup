@@ -287,7 +287,7 @@ chmod 640 /etc/ganeti/vnc-cluster-password
 chgrp gnt-daemons /etc/ganeti/vnc-cluster-password
 
 echo add sci repo in apt sources
-mv /root/sci-dev.list /etc/apt/sources.list.d
+cp /root/sci-dev.list /etc/apt/sources.list.d
 
 echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
@@ -333,10 +333,10 @@ echo If all is ok, proceed with "$0 sci"
 
 sci|service)
 
-if [ -z "$SCI_NAME" -o -z "$SCI_IP" ]; then
- cat <<EOF
-SCI_NAME and/or SCI_IP not defined.
-You should carefully fullfill parameters in /etc/sci/sci.conf
+if [ -z "$SCI_IP" ]; then
+  cat <<EOF
+SCI_IP not defined.
+You should add nameserver record to /etc/resolv.conf to fix this.
 
 Aborting.
 EOF
