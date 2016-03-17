@@ -32,7 +32,7 @@ function get-info {
       M=1024*K
       G=1024*M
       n=0
-   } /^[ 0-9]+:[ \t]+cs:Sync/ {
+   } /^[ 0-9]+:[ \t]+cs:SyncSource/ {
       #print $0
       col=split($0,str,"[ :]")
       j=0
