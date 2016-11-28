@@ -4,13 +4,13 @@ case $1 in
 	earlyshutdown)
 	#	upsmon -c fsd
 		sudo gnt-node-shutdown.sh
-		echo "host `hostname -f` now on battery power more than 15 minutes\nShutting down all instances on `date +%Y%m%d-%H:%M`"|mail -s "host `hostname -f` shutting down all instances" root
+		echo "host `hostname -f` now on battery power more than 15 minutes\nShutting down all instances on `date +%Y%m%d-%H:%M:%S`"|mail -s "host `hostname -f` shutting down all instances" root
 	;;
 	onbatt-mail)
-		echo "host `hostname -f` now on battery power \nStarting shutdown timer on `date +%Y%m%d-%H:%M`"|mail -s "host `hostname -f` now on battery power" root
+		echo "host `hostname -f` now on battery power \nStarting shutdown timer on `date +%Y%m%d-%H:%M:%S`"|mail -s "host `hostname -f` now on battery power" root
 	;;
 	online-mail)
-		echo "host `hostname -f` now on AC power \nCancel shutdown timer on `date +%Y%m%d-%H:%M`"|mail -s "host `hostname -f` now on AC power" root
+		echo "host `hostname -f` now on AC power \nCancel shutdown timer on `date +%Y%m%d-%H:%M:%S`"|mail -s "host `hostname -f` now on AC power" root
 	;;
 esac
 
