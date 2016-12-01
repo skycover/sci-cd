@@ -1,5 +1,38 @@
 #!/bin/sh
 
+usage(){
+  cat <<EOF
+SkyCover Infrastructure cluster distribution setup utility
+For more information refer http://www.skycover.ru/products/sci-cd
+
+Usage:
+
+1. Setup backbone interface (on both nodes)
+* Plug in backbone (to another node or to the backbone switch)
+# sci-setup backbone [-f]
+
+with -f the old backbone record will be overriden.
+ USE ONLY BEFORE CLUSTER IS SET UP!
+
+2. Setup cluster
+# sci-setup cluster [-i CLUSTER_IP] [-c CLUSTER_NAME] [-n NODE2_IP] [-s]
+
+CLUSTER_IP defaults to sci.conf else to interlink .10 and will be prompted
+CLUSTER_NAME defaults sci.conf else guessed from node1 name
+with -s (single) one-node install is performed
+without -s operation is possible if:
+ * backbone IP is .11 and there is ping to .12 which will be node2
+ * or NODE2_IP is preset in sci.conf or feed in via -v
+ In both situations NODE2 hostname and NODE2 lan IP will be checked via ssh
+ NODE2 hostname should have prefix part like NODE1 hostname
+
+3. Setup sci
+# sci-setup sci [-i SCI_LAN_IP] [-d]
+SCI_LAN_IP defaults to sci.conf else will be prompted
+with -d the current DNS servers will be sea as the forwarders for DNS server
+EOF
+}
+
 # usage check_ip IP
 # returns NETDEV MASK or exits with error
 check_ip(){
@@ -81,14 +114,45 @@ for_networks(){
   echo $N_NETWORK $N_NETMASK $N_BROADCAST $N_GATEWAY
 }
 
+# Check for reinstall
+if [ -f /etc/should-reinstall ]; then
+  cat <<EOF
+The server was not properly installed
+The following errors cause furhter improper configuration which is fatal:
+
+`cat /etc/should-reinstall`
+
+Please reinstall the server
+EOF
+  exit 1
+fi
+
+if [ "$#" -eq 0 ]; then
+  usage
+  exit 1
+fi
+
 . /etc/sci/sci.conf
 
-DOMAIN_NAME=`grep '^search' /etc/resolv.conf|head -1|awk '{print $2}'`
 SCI_NAME="sci"
-SCI_IP=`grep '^nameserver' /etc/resolv.conf|head -1|awk '{print $2}'`
+
+# Guess hostname, DOMAIN_NAME
+
+#hostname=`head -1 $target/etc/hostname`
+hostname=`hostname`
+
+#DOMAIN_NAME=`grep $hostname $target/etc/hosts|awk '{sub("^[^.]*\.","",$2); print $2}'`
+DOMAIN_NAME=`dnsdomainname`
+
+case $1 in
+
+cluster)
+
+shift
 
 #### Perform some AI
 
+# Guess NODE1_NAME, NODE1_LAN_IP
 # Check NODE1_IP against ifconfig
 # Get NODE1_NETDEV NODE1_MASK
 # Check NODE1_NETDEV against interfaces
@@ -97,30 +161,39 @@ SCI_IP=`grep '^nameserver' /etc/resolv.conf|head -1|awk '{print $2}'`
 # Get NODE1_LAN_NETDEV NODE1_LAN_MASK
 # Check NODE1_LAN_NETDEV against interfaces
 
+# Guess CLUSTER_NAME
+# Guess or prompt CLUSTER_IP
 # Check CLUSTER_IP against NODE1_LAN_x and NODE1_INT_x, try to find CLU_NETDEV, or set to MASTER_NETDEV
 # Check autodetected CLU_NETDEV against MASTER_NETDEV override, abort if not match
 # Set MASTER_NETDEV to match CLU_NETDEV
 # Check LAN_NETDEV against NODE1_LAN_NETDEV and NODE1_NETDEV
 # Set LAN_NETDEV or pass
 
-if [ -z "$CLUSTER_IP" ]; then
-  cat <<EOF
-ERROR!
-The CLUSTER_IP must be set!
-Check /etc/sci/sci.conf
-
-Aborting.
-EOF
-  exit 1
+short_hostname=`echo $hostname|sed -E 's/^([^.]*).*/\1/'`
+if [ -z "$NODE1_NAME" ]; then
+  NODE1_NAME=$short_hostname
+  nodenum=`echo $hostname|sed -E 's/^[^.]*[^0-9]([0-9]+)\.?.*/\1/'`
+  if [ -z "$nodenum" -o "$nodenum" != 1 ]; then
+    echo Node name must ends with number 1. Aborting.
+    exit 1
+  fi
+else
+  if [ "$NODE1_NAME" != "$short_hostname" ]; then
+    echo NODE1_NAME in config '"'$NODE1_NAME'"' not matching hostname short part '"'$short_hostname'"'. Aborting.
+    exit 1
+  fi
 fi
 
 read NODE1_NETDEV NODE1_MASK <<EOF
 `check_ip $NODE1_IP`
 EOF
+
 check_netdev $NODE1_NETDEV NODE1_NETDEV
-if check_ip_net $CLUSTER_IP $NODE1_IP $NODE1_MASK; then
-  CLU_NETDEV=$NODE1_NETDEV
-  CLU_NETMASK=$NODE1_MASK
+
+if [ -z "$NODE1_LAN_IP" ]; then
+  # get lan IP from hosts
+  #NODE1_LAN_IP=`grep $hostname $target/etc/hosts|awk '{print $1}'`
+  NODE1_LAN_IP=`ip addr show lan|awk -F'[ /]+' '/inet /{print $3;exit}'`
 fi
 
 if [ -n "$NODE1_LAN_IP" ]; then
@@ -128,6 +201,91 @@ if [ -n "$NODE1_LAN_IP" ]; then
 `check_ip $NODE1_LAN_IP`
 EOF
   check_netdev $NODE1_LAN_NETDEV NODE1_LAN_NETDEV
+  if [ "$NODE1_LAN_NETDEV" != "lan" ]; then
+    echo Network device for LAN should be named '"'lan'"', but got '"'$NODE1_LAN_NETDEV'"'. Aborting.
+    exit 1
+  fi
+fi
+
+while getopts "i:c:n:s" opt; do
+  case $opt in
+    i)
+        CLUSTER_IP=$OPTARG
+    ;;
+    c)
+        CLUSTER_NAME=$OPTARG
+    ;;
+    n)
+        NODE2_IP=$OPTARG
+    ;;
+    s)
+        SINGLE_MODE="yes"
+        NODE2_IP=""
+    ;;
+  esac
+done
+
+BASE_NAME=`echo $hostname|sed -E 's/^([^.]*[^0-9])[0-9]+\.?.*/\1/'`
+if [ -z "$CLUSTER_NAME" ]; then
+  CLUSTER_NAME=`echo $BASE_NAME|sed 's/-$//'`
+fi
+
+# (xend-relocation-hosts-allow '^localhost$ ^testing[0-9]+\\.test\\.ru$')
+reloc_domain=`awk -v d="$DOMAIN_NAME" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
+sed -i 's/^(xend-relocation-hosts-allow .*/(xend-relocation-hosts-allow '"'^localhost$ ^$BASE_NAME[0-9]+\\\\\\\\.$reloc_domain\$')/" /etc/xen/xend-config.sxp
+
+if [ -z "$SINGLE_MODE" -a -z "$NODE2_IP" ]; then
+  NODE2_IP=`echo $NODE1_IP|cut -d . -f 1-3`.12
+fi
+
+if [ -z "$CLUSTER_IP" ]; then
+  CLUSTER_IP=`echo $NODE1_IP|cut -d . -f 1-3`.10
+  cluster_ip_guess="yes"
+fi
+
+if [ -n "$NODE1_LAN_IP" -a -n "$cluster_ip_guess" ]; then
+  cat <<EOF
+Cluster domain name will be $CLUSTER_NAME.
+Cluster IP will be $CLUSTER_IP on the interlink.
+We recommend to set it to some unbound LAN IP address,
+but it is safe to simply press ENTER.
+EOF
+  while [ -z "$cluster_ip" ]; do
+    if [ -n "$cluster_ip_guess" ]; then
+      echo -n "Set cluster IP [$CLUSTER_IP]: "
+      read cluster_ip
+    fi
+    test -z "$cluster_ip" && cluster_ip=$CLUSTER_IP
+    if [ "$cluster_ip" = "$NODE1_LAN_IP" ]; then
+      echo "Cluster IP should not be the same as node's IP"
+      cluster_ip=""
+    elif check_ip_net $cluster_ip $NODE1_LAN_IP $NODE1_LAN_MASK; then
+      CLUSTER_IP=$cluster_ip
+    elif check_ip_net $cluster_ip $NODE1_IP $NODE1_MASK; then
+      CLUSTER_IP=$cluster_ip
+    else
+       echo $cluster_ip not in the LAN
+       cluster_ip=""
+    fi
+    if [ -n "$cluster_ip" ]; then
+      echo \\nChecking IP is free...
+      if ping -q -c 1 $cluster_ip >/dev/null; then
+        echo $cluster_ip is alive. It should be a free address!
+        cluster_ip=""
+      else
+        echo ok
+      fi
+    fi
+    test -z "$cluster_ip" -a -z "$cluster_ip_guess" && exit 1 # we're not interactive
+  done
+fi
+
+if check_ip_net $CLUSTER_IP $NODE1_IP $NODE1_MASK; then
+  CLU_NETDEV=$NODE1_NETDEV
+  CLU_NETMASK=$NODE1_MASK
+fi
+
+if [ -n "$NODE1_LAN_IP" ]; then
   if check_ip_net $CLUSTER_IP $NODE1_LAN_IP $NODE1_LAN_MASK; then
     CLU_NETDEV=$NODE1_LAN_NETDEV
     CLU_NETMASK=$NODE1_LAN_MASK
@@ -175,11 +333,48 @@ LAN_NETDEV=${LAN_NETDEV:-$MASTER_NETDEV}
 
 #### End AI
 
-case $1 in
-
-cluster)
+if [ -n "$NODE2_IP" ]; then
+  if check_ip_net $NODE2_IP $NODE1_IP $NODE1_MASK; then
+    echo \\n\\nConnecting to Node2 via $NODE2_IP
+    echo You will be prompted for a root password...\\n
+    if ping -q -c 1 $NODE2_IP >/dev/null; then
+      #NODE2_NAME=`ssh $NODE2_IP hostname|sed -E 's/^([^.]*[^0-9])[0-9]+\.?.*/\1/'`
+      node2=`ssh -o GlobalKnownHostsFile=/tmp/known_hosts -o UserKnownHostsFile=/tmp/known_hosts $NODE2_IP  "hostname; ip addr show lan|awk -F'[ /]+' '/inet /{print \\\$3;exit}'"`
+      rm /tmp/known_hosts
+      NODE2_NAME_TEST=`echo $node2|awk '{print $1}'|sed -E 's/^([^.]*[^0-9])[0-9]+\.?.*/\1/'`
+      NODE2_NAME=`echo $node2|awk '{print $1}'|awk -F. '{print $1}'`
+      NODE2_LAN_IP=`echo $node2|awk '{print $2}'`
+      if [ -z "$NODE2_NAME" ]; then
+	echo Unable to get NODE2 name via ssh $NODE2_IP.
+        echo Diagnostic is $node2
+	echo Aborting.
+	exit 1
+      fi
+      if [ "$NODE2_NAME" != "$BASE_NAME"2 ]; then
+	echo NODE2 name must be "$BASE_NAME"2
+        echo Current is $NODE2_NAME
+	echo Aborting.
+	exit 1
+      fi
+      if [ -z "$NODE2_LAN_IP" ]; then
+	echo Unable to get NODE2 lan IP via ssh $NODE2_IP.
+        echo Diagnostic is $node2
+	echo Aborting.
+	exit 1
+      fi
+    else
+      echo Unable to reach NODE2 via $NODE2_IP. Aborting.
+      exit 1
+    fi
+  else
+    echo Node1 $NODE1_IP and Node2 $NODE2_IP are not on the same network. Aborting.
+    exit 1
+  fi
+fi
 
 cat <<EOF
+
+########################################
 Parameters detected:
 Domain name: $DOMAIN_NAME
 
@@ -187,11 +382,7 @@ Master network interface: $MASTER_NETDEV
 
 Cluster name: $CLUSTER_NAME
 Cluster IP: $CLUSTER_IP
-
-Service instance name: $SCI_NAME
-Service instance IP: $SCI_IP
 EOF
-test -n "$SCI_LAN_IP" && echo Service instance LAN IP: $SCI_LAN_IP
 cat <<EOF
 
 Node 1 name: $NODE1_NAME
@@ -212,15 +403,6 @@ This will cause error. Aborting.
 EOF
   exit 1
  fi
- if [ -n "$NODE1_LAN_IP" -a -z "$NODE2_LAN_IP" ]; then
-cat <<EOF
-ERROR!
-NODE1_LAN_IP is specified but NODE2_LAN_IP is empty.
-Both values must be set or unset.
-This will cause error. Aborting.
-EOF
-  exit 1
- fi
  cat <<EOF
 Node 2 name: $NODE2_NAME
 Node 2 IP: $NODE2_IP
@@ -232,8 +414,7 @@ else
 WARNING!
 No second node specified.
 Creating SkyCover Infrastructure with on only one node.
-This is strongly not recommended for production use!
-You should fullfill NODE2_NAME and NODE2_IP parameters in /etc/sci/sci.conf
+All redundancy features will be unavailable!
 EOF
 fi
 
@@ -244,8 +425,17 @@ if [ "$i" != "y" -a "$i" != "Y" ]; then
  exit 1
 fi
 
+echo Refilling sci.conf
+sed -i 's/^CLUSTER_NAME=.*/CLUSTER_NAME='"$CLUSTER_NAME"'/' /etc/sci/sci.conf
+sed -i 's/^CLUSTER_IP=.*/CLUSTER_IP='"$CLUSTER_IP"'/' /etc/sci/sci.conf
+test -n "$NODE1_NAME" && sed -i 's/^NODE1_NAME=.*/NODE1_NAME='"$NODE1_NAME"'/' /etc/sci/sci.conf
+test -n "$NODE1_LAN_IP" && sed -i 's/^NODE1_LAN_IP=.*/NODE1_LAN_IP='"$NODE1_LAN_IP"'/' /etc/sci/sci.conf
+test -n "$NODE2_NAME" && sed -i 's/^NODE2_NAME=.*/NODE2_NAME='"$NODE2_NAME"'/' /etc/sci/sci.conf
+test -n "$NODE2_IP" && sed -i 's/^NODE2_IP=.*/NODE2_IP='"$NODE2_IP"'/' /etc/sci/sci.conf
+test -n "$NODE2_LAN_IP" && sed -i 's/^NODE2_LAN_IP=.*/NODE2_LAN_IP='"$NODE2_LAN_IP"'/' /etc/sci/sci.conf
+
 echo Creating empty /root/.ssh
-mkdir ~/.ssh
+mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 
 echo Fullfilling /etc/hosts
@@ -261,11 +451,15 @@ ff02::2 ip6-allrouters
 
 # cluster
 $CLUSTER_IP	$CLUSTER_NAME.$DOMAIN_NAME $CLUSTER_NAME
-# service machine
-$SCI_IP	$SCI_NAME.$DOMAIN_NAME $SCI_NAME puppet.$DOMAIN_NAME puppet apt.$DOMAIN_NAME apt
 # first nodes
 $NODE1_IP	$NODE1_NAME.$DOMAIN_NAME $NODE1_NAME
 EOF
+
+if [ -z "$SINGLE_MODE" ]; then
+cat <<EOF >>/etc/hosts
+$NODE2_IP	$NODE2_NAME.$DOMAIN_NAME $NODE2_NAME
+EOF
+fi
 
 echo Fulfilling default /etc/ganeti/networks
 
@@ -275,9 +469,6 @@ if [ -n "$NODE1_SAN_IP" ]; then
 fi
 if [ -n "$NODE1_LAN_IP" ]; then
   for_networks $NODE1_LAN_IP $NODE1_LAN_MASK $NODE1_LAN_NETDEV >>/etc/ganeti/networks
-elif [ -n "$SCI_LAN_IP" ]; then
-  fnx=`for_networks $SCI_LAN_IP ${SCI_LAN_NETMASK:-255.255.255.0}`
-  echo $fnx $SCI_LAN_GATEWAY >>/etc/ganeti/networks 
 fi
 
 vncpasswd=`pwgen -1`
@@ -295,13 +486,13 @@ if [ -n "$NODE1_SAN_IP" ]; then
 fi
 gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LAN_NETDEV --master-netdev $MASTER_NETDEV $SECONDARY_IP $CLUSTER_NAME
 # XXX in ganeti 2.6 should be added: --master-netmask $MASTER_NETMASK
-test $? -eq 0 || (echo Something wrong; exit 1)
+test $? -eq 0 || (echo Something wrong on cluster init; exit 1)
 
 echo Tuning cluster
-gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',initrd_path="/boot/initrd.img-3-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
-test $? -eq 0 || (echo Something wrong; exit 1)
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',kernel_path="/boot/vmlinuz-xenU",initrd_path="/boot/initrd.img-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
+test $? -eq 0 || (echo Something wrong on first modify; exit 1)
 gnt-cluster modify --ipolicy-bounds-specs=min:disk-size=0,cpu-count=1,disk-count=0,memory-size=1,nic-count=0,spindle-use=0/max:disk-size=4192256,cpu-count=128,disk-count=32,memory-size=1048576,nic-count=32,spindle-use=12
-test $? -eq 0 || (echo Something wrong; exit 1)
+test $? -eq 0 || (echo Something wrong on second modify; exit 1)
 
 # tuning lvm filter. if you don't use md, comment it
 if (pvs|grep xenvg|grep -q md) then
@@ -336,12 +527,57 @@ sci|service)
 if [ -z "$SCI_IP" ]; then
   cat <<EOF
 SCI_IP not defined.
-You should add nameserver record to /etc/resolv.conf to fix this.
+Fix this in sci.conf
 
 Aborting.
 EOF
  exit 1
 fi
+
+if gnt-instance info sci >/dev/null 2>&1; then
+  echo Instance sci is already present. Aborting.
+  exit 1
+fi
+
+shift
+
+while getopts "i:d" opt; do
+  case $opt in
+    i)
+        SCI_LAN_IP=$OPTARG
+    ;;
+    d)
+        set_forwarders=yes
+    ;;
+  esac
+done
+test -n "$SCI_LAN_IP" && sci_lan_ip_preset="yes"
+
+while [ -z "$sci_lan_ip" ]; do
+  if [ -z "$sci_lan_ip_preset" ]; then
+    echo -n 'Set sci LAN IP or enter "none" and press ENTER: '
+    read sci_lan_ip
+  else
+    sci_lan_ip=$SCI_LAN_IP
+  fi
+  if [ -n "$sci_lan_ip" -a "$sci_lan_ip" != "none" -a -n "$NODE1_LAN_IP" ]; then
+    if [ "$sci_lan_ip" = "$NODE1_LAN_IP" ]; then
+      echo "sci LAN IP should not be the same as node's LAN IP"
+      sci_lan_ip=""
+    elif check_ip_net $sci_lan_ip $NODE1_LAN_IP $NODE1_LAN_MASK; then
+      SCI_LAN_IP=$sci_lan_ip
+    else
+       echo $sci_lan_ip not in the LAN
+       sci_lan_ip=""
+    fi
+  fi
+  if [ -z "$sci_lan_ip" -a -n "$sci_lan_ip_preset" ]; then
+    echo "SCI_LAN_IP has wrong preset. Aborting."
+    exit 1 # we're not interactive
+  fi
+done
+
+FORWARDERS=`awk '/nameserver/{printf("%s;",$2)}' $target/etc/resolv.conf`
 
 MASTER_NETDEV=`gnt-cluster info|awk '/master netdev:/{print $NF; exit 0}'`
 LAN_NETDEV=`gnt-cluster info|awk '/^Default nic parameters:/{s=1}/ *link: /{if(s){print $NF; exit 0}}'`
@@ -364,6 +600,11 @@ EOF
   fi
 fi
 
+read NODE1_NETDEV NODE1_MASK <<EOF
+`check_ip $NODE1_IP`
+EOF
+check_netdev $NODE1_NETDEV NODE1_NETDEV
+
 check_netdev $MASTER_NETDEV MASTER_NETDEV
 check_netdev $LAN_NETDEV LAN_NETDEV
 
@@ -373,6 +614,46 @@ IP: $SCI_IP on $NODE1_NETDEV
 EOF
 test -n "$LANIF" && echo Second network device: $LAN_NETDEV
 test -n "$SCI_LAN_IP" && echo Second network IP: $SCI_LAN_IP
+test -n "$set_forwarders" && echo Will use local DNS forwarders
+
+echo "Proceed with sci VM creation [y/n]?"
+read i
+if [ "$i" != "y" -a "$i" != "Y" ]; then
+ echo Aborted.
+ exit 1
+fi
+
+echo Adding sci to /etc/hosts
+sed -i "/$SCI_NAME.*puppet/d" /etc/hosts
+cat <<EOF >>/etc/hosts
+# service machine
+$SCI_IP	$SCI_NAME.$DOMAIN_NAME $SCI_NAME puppet.$DOMAIN_NAME puppet apt.$DOMAIN_NAME apt
+EOF
+gnt-cluster copyfile /etc/hosts
+
+test -n "$SCI_LAN_IP" && sed -i 's/^SCI_LAN_IP=.*/SCI_LAN_IP='"$SCI_LAN_IP"'/' /etc/sci/sci.conf
+
+if [ -z "$NODE1_LAN_IP" -a -n "$SCI_LAN_IP" ]; then
+  fnx=`for_networks $SCI_LAN_IP ${SCI_LAN_NETMASK:-"255.255.255.0"}`
+  if grep -q "$fnx" /etc/ganeti/networks; then
+    echo /etc/ganeti/networks already ok
+  else
+    echo Adding LAN to /etc/ganeti/networks
+    echo $fnx $SCI_LAN_GATEWAY >>/etc/ganeti/networks 
+    gnt-cluster copyfile /etc/ganeti/networks
+  fi
+fi
+
+if [ -n "$set_forwarders" ]; then
+  DNS_FORWARDERS="$FORWARDERS"
+fi
+bad_forwarders=`echo $DNS_FORWARDERS|grep -q $SCI_IP && echo SCI_LAN_IP $SCI_IP`
+test -z "$bad_forwarders" -a -n "$SCI_LAN_IP" && bad_forwarders=`echo $DNS_FORWARDERS|grep -q $SCI_LAN_IP && echo SCI_LAN_IP $SCI_LAN_IP`
+if [ -n "$bad_forwarders" ]; then
+    echo DNS_FORWARDERS should not contain $bad_forwarders. Aborting.
+    exit 1
+fi
+sed -i 's/^DNS_FORWARDERS=.*/DNS_FORWARDERS="'"$DNS_FORWARDERS"'"/' /etc/sci/sci.conf
 
 # check /media/sci existance
 if ! [ -d /media/sci/pool/main ]; then
@@ -386,6 +667,12 @@ else
   gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME --no-name-check --no-ip-check $SCI_NAME
 fi
 
+cat <<EOF >/etc/resolv.conf
+search $DOMAIN_NAME
+nameserver $SCI_IP
+EOF
+gnt-cluster copyfile /etc/resolv.conf
+
 ;;
 
 show)
@@ -397,7 +684,7 @@ xenvg)
 cat <<EOF
 Sorry, but this operation is not supported yet.
 
-To xreate xenvg, use the following scheme:
+To create xenvg, use the following scheme:
 
 vgcreate xenvg /dev/DEVICE_OF_YOUR_CHOICE
 lvcreate -L 20G -n system-stuff xenvg
@@ -409,10 +696,113 @@ umount /mnt
 # into /etc/fstab just BEFORE mount of /media/sci
 mount /stuff 
 EOF
+
 ;;
+
+interlink|backbone)
+
+test "$2" = "-f" && remove_old_backbone=yes
+
+nodenum=`echo $hostname|sed -E 's/^[^.]*[^0-9]([0-9]+)\.?.*/\1/'`
+if echo "$nodenum"|grep -q '[^0-9]'; then
+ echo Node name must ends with number 1 to 90. Please reinstall.
+ exit 1
+fi
+if [ -z "$nodenum" -o "$nodenum" -lt 0 -o "$nodenum" -gt 90 ]; then
+ echo Node name must ends with number 1 to 90. Please reinstall.
+ exit 1
+fi
+if grep -q "^auto backbone" /etc/network/interfaces; then
+  if [ -z "$remove_old_backbone" ]; then
+    echo Backbone interface already configured.
+    exit
+  else
+    ifdown backbone
+  fi
+fi
+
+echo Node number: $nodenum
+
+ifs=$target/etc/network/interfaces
+iface=`awk '/^[ \t]*bridge_ports /{print $2;exit}' $ifs`
+echo LAN interface: $iface
+
+# here will parse ip link show:
+# 1. up interfaces
+# 2. grep +UP -NO-CARRIER
+#2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast master local state UP mode DEFAULT qlen 1000
+#    link/ether ......
+#3: eth1: <BROADCAST,MULTICAST> mtu 1500 qdisc pfifo_fast master test state DOWN mode DEFAULT qlen 1000
+#     link/ether ......
+#4: eth2: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc pfifo_fast master test state DOWN mode DEFAULT qlen 1000	
+ip link show|awk -F':[ \t]*' '/[0-9]:[ \t]+eth[0-9]:/{print $2}'|while read testif; do
+ if [ "$testif" != "$iface" ]; then
+  ifconfig $testif up
+ fi
+done
+echo Waiting 30 seconds for links to be up
+sleep 32
+br0=`ip link show|awk -F':[ \t]*' -vlanif=$iface '
+/[0-9]:[ \t]+eth[0-9]:/{
+ if($0~/<[^>]*UP.*>/ && $0!~/NO-CARRIER/ && $2!=lanif){
+  if(s){i="toomany"; exit;}
+  else{i=$2; s++}
+  }
+}
+END{if(i)print i}'`
+
+if [ "$br0" = "toomany" ]; then
+  echo Too many interfaces are up. You should disconnect all but LAN and backbone. Aborting.
+  exit 1
+elif [ -z "$br0" ]; then
+  echo Cannot find free UP interface. Backbone interface should be plugged to the anoter server or switch which must be powered on. Aborting.
+  exit 1
+fi
+
+echo Backbone interface: $br0
+
+ip link show|awk -F':[ \t]*' '/[0-9]:[ \t]+eth[0-9]:/{print $2}'|while read testif; do
+ if [ "$testif" != "$iface" ]; then
+  ifconfig $testif down
+ fi
+done
+
+# remove backbone interfaces
+# XXX probably we should better stop here and request -force
+awk '/^auto backbone/{exit}//{print}' $ifs >$ifs.new
+
+cat <<EOF >>$ifs.new
+
+auto backbone
+iface backbone inet static
+        address 10.101.200.$((10+$nodenum))
+        netmask 255.255.255.0
+        network 10.101.200.0
+        broadcast 10.101.200.255
+        bridge_ports $br0
+        bridge_stp off
+        bridge_fd 0
+
+#	up ifconfig $br0 mtu 9000
+#	up ifconfig backbone mtu 9000
+EOF
+
+mv $ifs.new $ifs
+
+echo Up and test backbone
+ifup backbone
+if ifconfig backbone|grep 'inet addr:'; then
+    echo ok.
+else
+    echo Interface backbone not UP. Something wrong. Aborting.
+    exit 1
+fi
+
+;;
+
 *)
 
-echo "Usage: $0 {cluster|sci|show}"
+usage
 
 ;;
 

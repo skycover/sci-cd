@@ -52,3 +52,6 @@ ethtool
 iperf
 ifenslave-2.6
 yum
+nmap
+wget
+htop

@@ -73,17 +73,23 @@ fi
 
 hostname=`head -1 $target/etc/hostname`
 if [ -n "$hostname" ]; then
+base_name=`echo $hostname|sed -E 's/^([^.]*[^0-9])[0-9]+\.?.*/\1/'`
 ipaddr=`grep $hostname $target/etc/hosts|awk '{print $1}'`
 hostfqdn=`grep $hostname $target/etc/hosts|awk '{print $2}'`
 domain=`grep $hostname $target/etc/hosts|awk '{sub("^[^.]*\.","",$2); print $2}'`
-reloc_domain=`awk -v d="$domain" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
+#reloc_domain=`awk -v d="$domain" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
 if [ -n "$domain" -a -n "$ipaddr" ]; then
  echo Configuring host/domainname stuff for $ipaddr $fqdn
  if [ "$hostname" = "$hostfqdn" ]; then
   echo Hostname configuration already ok
  else
+  nodenum=`echo $hostname|sed 's/^[^0-9]*\([0-9][0-9]*\)$/\1/g'`
+  if [ -z $nodenum -o $nodenum -lt 0 -o $nodenum -gt 90]; then
+   echo "Host name must ends with number between 1 and 90"|tee -a $target/etc/should-reinstall
+  fi
   echo $hostfqdn >$target/etc/hostname
-  ./strreplace.sh xend-config.sxp "^\(xend-relocation-hosts-allow" "(xend-relocation-hosts-allow '^localhost$ ^gnt[0-9]+\\\\\\\\.$reloc_domain\$')"
+#  ./strreplace.sh xend-config.sxp "^\(xend-relocation-hosts-allow" "(xend-relocation-hosts-allow '^localhost$ ^$base_name[0-9]+\\\\\\\\.$reloc_domain\$')"
+  # copy template for xend-config.sxp - it will be tuned in sci-setup
   mkdir -p $target/etc/xen
   cp xend-config.sxp $target/etc/xen
  fi
@@ -93,15 +99,17 @@ fi
 fi
 
 ## Assign supersede parameters for node's dhcp
-dns=`grep nameserver $target/etc/resolv.conf|awk '{print $2; exit}'\;`
+dns=10.101.200.20 # sci
 ./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\;\nsupersede domain-name-servers $dns\;"
 
 ## Set default interface to be bridged, optionally with vlan (see postinst.conf)
-## Set mtu 9000 on the default interface
 
 echo Configuring interfaces
 ifs=$target/etc/network/interfaces
 iface=`awk '/^iface /{if($2 != "lo"){print $2;exit}}' $ifs`
+if grep "$iface.*inet.*dhcp" $ifs; then
+  echo "LAN interface must be static"|tee -a $target/etc/should-reinstall
+fi
 
 cat <<EOF >interfaces
 # This file describes the network interfaces available on your system
@@ -129,8 +137,8 @@ EOF
 fi
 
 cat <<EOF >>interfaces
-auto xen-br0
-iface xen-br0 inet static
+auto lan
+iface lan inet static
 EOF
 
 awk '/^[ \t]*(address|netmask|network|broadcast|gateway)/' $ifs >>interfaces
@@ -138,19 +146,18 @@ cat <<EOF >>interfaces
         bridge_ports $xenif
         bridge_stp off
         bridge_fd 0
-#	up ifconfig $xenif mtu 9000
-#	up ifconfig xen-br0 mtu 9000
+
 EOF
- 
+
 ## Add example of additional interfaces
 
 cat <<EOF >>interfaces
 
-# The exmample for static IP on LAN interface
+# The exmample for static IP on WAN interface
 # on the second ethernet card
 
-#auto xen-lan
-#iface xen-lan inet static
+#auto wan
+#iface wan inet static
 #        address 192.168.X.X
 #        netmask 255.255.255.0
 #        network 192.168.X.0
@@ -160,11 +167,11 @@ cat <<EOF >>interfaces
 #        bridge_stp off
 #        bridge_fd 0
 
-# The example of dhcp-configured LAN interface
+# The example of dhcp-configured WAN interface
 # on the second ethernet card
 
-#auto xen-lan
-#iface xen-lan inet dhcp
+#auto wan
+#iface wan inet dhcp
 #        bridge_ports eth1
 #        bridge_stp off
 #        bridge_fd 0
@@ -176,14 +183,14 @@ cat <<EOF >>interfaces
 #iface eth0.VLAN_NO inet manual
 #        up ifconfig eth0.VLAN_NO up
 #
-#auto xen-VLAN_NAME
-#iface xen-VLAN_NAME inet manual
-#        up brctl addbr xen-VLAN_NAME
-#        up brctl addif xen-VLAN_NAME eth0.8
-#        up brctl stp xen-VLAN_NAME off
-#        up ifconfig xen-VLAN_NAME up
-#        down ifconfig xen-VLAN_NAME down
-#        down brctl delbr xen-VLAN_NAME
+#auto VLAN_NAME
+#iface VLAN_NAME inet manual
+#        up brctl addbr VLAN_NAME
+#        up brctl addif VLAN_NAME eth0.8
+#        up brctl stp VLAN_NAME off
+#        up ifconfig VLAN_NAME up
+#        down ifconfig VLAN_NAME down
+#        down brctl delbr VLAN_NAME
 EOF
 
 cat interfaces >$ifs.tmp
@@ -232,10 +239,6 @@ sed -i '/\/media\/usb0/d' $target/etc/fstab
 ## Set localized console and keyboard
 
 cp files/default/* $target/etc/default/
-
-## Set yum repos for CentOS 7
-
-cp files/base.repo $target/etc/yum/repos.d/
 
 ## Add startup script rc.sci to setup performance
 
@@ -324,11 +327,11 @@ options bnx2x disable_tpa=1
 options usbcore autosuspend=-1
 EOF
 
-## Set up symlinks /boot/vmlinuz-3-xenU, /boot/initrd-3-xenU
+## Set up symlinks /boot/vmlinuz-xenU, /boot/initrd-xenU
 
 # we'll assume only one xen kernel at the moment of the installation
-ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-3-xenU
-ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-3-xenU
+ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-xenU
+ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-xenU
 
 ## Set up symlink /usr/lib/xen for quemu-dm (workaround)
 ln -s $target/usr/lib/xen-4.1 $target/usr/lib/xen
@@ -418,7 +421,7 @@ update-rc.d nut-client remove
 cat <<EOF >$target/etc/motd
 
 SkyCover Infrastructure high availability cluster node, ver. $VERSION
-For more information see http://redmine.skycover.ru/projects/sci-cd
+For more information see http://www.skycover.ru
 
 EOF
 
@@ -436,7 +439,7 @@ cat <<EOF >$target/etc/sci/sci.conf
 
 # The hostname to represent the cluster (without a domain part).
 # It MUST be different from any node's hostnames
-CLUSTER_NAME=gnt
+CLUSTER_NAME=
 
 # The IP address corresponding to CLUSTER_NAME.
 # It MUST be different from any node's IP.
@@ -446,8 +449,8 @@ CLUSTER_NAME=gnt
 CLUSTER_IP=
 
 # The first (master) node data
-NODE1_NAME=$hostname
-NODE1_IP=$ipaddr
+NODE1_NAME=
+NODE1_IP=10.101.200.11
 
 # Optional separate IP for SAN (should be configured and up;
 # ganeti node will be configured with -s option)
@@ -455,6 +458,8 @@ NODE1_SAN_IP=
 # Optional separate IP for LAN (should be configured and up)
 NODE1_LAN_IP=
 
+# Mandatory IP for virtual service machine "sci" in the backbone segment
+SCI_IP=10.101.200.2
 # Optional additional IP for virtual service machine "sci" in the LAN segment.
 # If NODE1_LAN_IP is set, then you probably wish to set this too.
 # (you should not to pre-configure this IP on the node)
@@ -464,8 +469,12 @@ SCI_LAN_IP=
 SCI_LAN_NETMASK=
 SCI_LAN_GATEWAY=
 
+# Single mode. The cluster will be set up without second node, in non redundant mode
+# Uncomment to enable single mode
+#SINGLE_MODE=yes
+
+
 # The second node data
-# If you skip it, then the cluster will be set up in non redundant mode
 NODE2_NAME=
 NODE2_IP=
 NODE2_SAN_IP=
