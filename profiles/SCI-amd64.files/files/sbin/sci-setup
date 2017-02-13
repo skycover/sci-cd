@@ -701,7 +701,17 @@ EOF
 
 interlink|backbone)
 
-test "$2" = "-f" && remove_old_backbone=yes
+shift
+while getopts "fs" opt; do
+  case $opt in
+    f)
+        remove_old_backbone=yes
+    ;;
+    s)
+        SINGLE_MODE="yes"
+    ;;
+  esac
+done
 
 nodenum=`echo $hostname|sed -E 's/^[^.]*[^0-9]([0-9]+)\.?.*/\1/'`
 if echo "$nodenum"|grep -q '[^0-9]'; then
@@ -726,6 +736,8 @@ echo Node number: $nodenum
 ifs=$target/etc/network/interfaces
 iface=`awk '/^[ \t]*bridge_ports /{print $2;exit}' $ifs`
 echo LAN interface: $iface
+
+if [ -z "$SINGLE_MODE" ]; then
 
 # here will parse ip link show:
 # 1. up interfaces
@@ -758,6 +770,10 @@ elif [ -z "$br0" ]; then
   echo Cannot find free UP interface. Backbone interface should be plugged to the anoter server or switch which must be powered on. Aborting.
   exit 1
 fi
+
+else
+  br0=stubif
+fi #SINGLE_MODE
 
 echo Backbone interface: $br0
 
