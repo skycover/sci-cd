@@ -233,6 +233,7 @@ fi
 # (xend-relocation-hosts-allow '^localhost$ ^testing[0-9]+\\.test\\.ru$')
 reloc_domain=`awk -v d="$DOMAIN_NAME" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
 sed -i 's/^(xend-relocation-hosts-allow .*/(xend-relocation-hosts-allow '"'^localhost$ ^$BASE_NAME[0-9]+\\\\\\\\.$reloc_domain\$')/" /etc/xen/xend-config.sxp
+service xen restart
 
 if [ -z "$SINGLE_MODE" -a -z "$NODE2_IP" ]; then
   NODE2_IP=`echo $NODE1_IP|cut -d . -f 1-3`.12
