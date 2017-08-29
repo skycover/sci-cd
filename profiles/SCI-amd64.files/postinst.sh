@@ -99,7 +99,7 @@ fi
 fi
 
 ## Assign supersede parameters for node's dhcp
-dns=10.101.200.20 # sci
+dns=10.101.200.2 # sci
 ./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\;\nsupersede domain-name-servers $dns\;"
 
 ## Set default interface to be bridged, optionally with vlan (see postinst.conf)
