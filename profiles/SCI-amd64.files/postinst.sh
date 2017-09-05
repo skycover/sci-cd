@@ -56,6 +56,7 @@ grub_file=$target/etc/default/grub
 if [ -f $grub_file ]; then
  echo Configuring GRUB 
  ./strreplace.sh $grub_file "^GRUB_CMDLINE_XEN" 'GRUB_CMDLINE_XEN="dom0_mem=1536M"'
+ ./strreplace.sh $grub_file "^GRUB_CMDLINE_LINUX" 'GRUB_CMDLINE_LINUX="net.ifnames=0 biosdevname=0"'
  # XXX there is no setting separately for xenkopt
  # XXX with nosmp md raid is not loading with hypervisor menuentry
  #echo 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX nosmp"' >>$grub_file
@@ -63,6 +64,9 @@ if [ -f $grub_file ]; then
 else
  echo Not configuring GRUB
 fi
+
+## Set PermitRoolLogin=yes in ssd_config
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' $TARGET/etc/ssh/sshd_config
 
 ## Set /var/log/kern.log to unbuffered mode
 
@@ -99,7 +103,7 @@ fi
 fi
 
 ## Assign supersede parameters for node's dhcp
-dns=10.101.200.20 # sci
+dns=10.101.200.2 # sci
 ./strreplace.sh $target/etc/dhcp/dhclient.conf "^#supersede domain-name" "supersede domain-name $domain\;\nsupersede domain-name-servers $dns\;"
 
 ## Set default interface to be bridged, optionally with vlan (see postinst.conf)
@@ -424,6 +428,10 @@ SkyCover Infrastructure high availability cluster node, ver. $VERSION
 For more information see http://www.skycover.ru
 
 EOF
+
+## Set vim disable defaults for 8.0
+sed -i 's/\" let g:skip_defaults_vim = 1/let g:skip_defaults_vim = 1/' $TARGET/etc/vim/vimrc
+
 
 ## Set chrony reboot if there is no sources
 

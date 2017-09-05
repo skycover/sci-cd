@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 usage(){
   cat <<EOF
@@ -38,13 +38,12 @@ EOF
 check_ip(){
   /sbin/ifconfig|awk -vip="$1" '
 /^[a-z]/{iface=$1}
-/^[ \t]*inet addr:/{
-  split($2,A,":")
-  addr=A[2]
+/^[ \t]*inet /{
+  addr=$2
   if(addr == ip){
     for(i=1; i<=NF; i++){
-      if($i ~ /^Mask:/){
-        split($i,M,":")
+      if($i ~ /^netmask /){
+        split($i,M,"\t")
         mask=M[2]
       }
     }
@@ -70,7 +69,7 @@ EOF
 # usage: check_netdev IFACE PURPOSE
 # exits with error
 check_netdev(){
-  if ! grep -q "^iface $1" /etc/network/interfaces; then
+  if ! grep -q "^iface `echo $1|cut -d ':' -f 1`" /etc/network/interfaces; then
    cat <<EOF
 ERROR!
 The interface $1 as $2 should be configured and up!
@@ -80,7 +79,7 @@ Aborting.
 EOF
    exit 1
   fi
-  if ! /sbin/ifconfig|grep -q "^$1 "; then
+  if ! /sbin/ifconfig|grep -q "^`echo $1|cut -d ':' -f 1`"; then
    cat <<EOF
 ERROR!
 The interface $1 as $2 seems configured but NOT UP!
@@ -201,7 +200,7 @@ if [ -n "$NODE1_LAN_IP" ]; then
 `check_ip $NODE1_LAN_IP`
 EOF
   check_netdev $NODE1_LAN_NETDEV NODE1_LAN_NETDEV
-  if [ "$NODE1_LAN_NETDEV" != "lan" ]; then
+  if [ "`echo $NODE1_LAN_NETDEV|cut -d ':' -f 1`" != "lan" ]; then
     echo Network device for LAN should be named '"'lan'"', but got '"'$NODE1_LAN_NETDEV'"'. Aborting.
     exit 1
   fi
@@ -233,6 +232,7 @@ fi
 # (xend-relocation-hosts-allow '^localhost$ ^testing[0-9]+\\.test\\.ru$')
 reloc_domain=`awk -v d="$DOMAIN_NAME" 'BEGIN{gsub("[.]","\\\\\\\\\\\\\\\\.",d);print d; exit}'`
 sed -i 's/^(xend-relocation-hosts-allow .*/(xend-relocation-hosts-allow '"'^localhost$ ^$BASE_NAME[0-9]+\\\\\\\\.$reloc_domain\$')/" /etc/xen/xend-config.sxp
+service xen restart
 
 if [ -z "$SINGLE_MODE" -a -z "$NODE2_IP" ]; then
   NODE2_IP=`echo $NODE1_IP|cut -d . -f 1-3`.12
@@ -484,12 +484,13 @@ echo Initializing cluster
 if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
 fi
-gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=$LAN_NETDEV --master-netdev $MASTER_NETDEV $SECONDARY_IP $CLUSTER_NAME
+gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=`echo $LAN_NETDEV|cut -d ':' -f 1` --master-netdev `echo $MASTER_NETDEV|cut -d ':' -f 1` $SECONDARY_IP $CLUSTER_NAME
 # XXX in ganeti 2.6 should be added: --master-netmask $MASTER_NETMASK
 test $? -eq 0 || (echo Something wrong on cluster init; exit 1)
 
 echo Tuning cluster
-gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.1/bin/pygrub,use_bootloader=True,bootloader_args='',kernel_path="/boot/vmlinuz-xenU",initrd_path="/boot/initrd.img-xenU",root_path=/dev/xvda1 --reserved-lvs="$RESERVED_VOLS"
+gnt-cluster modify --hypervisor-parameters xen-pvm:bootloader_path=/usr/lib/xen-4.8/bin/pygrub,use_bootloader=True,bootloader_args='',kernel_path="/boot/vmlinuz-xenU",initrd_path="/boot/initrd.img-xenU",root_path=/dev/xvda1,xen_cmd=xl --reserved-lvs="$RESERVED_VOLS"
+gnt-cluster modify --hypervisor-parameters xen-hvm:use_localtime=true,kernel_path=/usr/lib/xen-4.8/boot/hvmloader,device_model=/usr/bin/qemu-system-x86_64,xen_cmd=xl
 test $? -eq 0 || (echo Something wrong on first modify; exit 1)
 gnt-cluster modify --ipolicy-bounds-specs=min:disk-size=0,cpu-count=1,disk-count=0,memory-size=1,nic-count=0,spindle-use=0/max:disk-size=4192256,cpu-count=128,disk-count=32,memory-size=1048576,nic-count=32,spindle-use=12
 test $? -eq 0 || (echo Something wrong on second modify; exit 1)

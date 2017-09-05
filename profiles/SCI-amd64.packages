@@ -1,8 +1,7 @@
 linux-image-amd64
-linux-image-3.2.0-4-amd64
-xen-hypervisor-4.1-amd64
+xen-hypervisor-4.8-amd64
 firmware-linux
-xen-utils-4.1
+xen-utils-4.8
 xenstore-utils
 qemu
 drbd8-utils
@@ -15,9 +14,9 @@ vim
 less
 puppet
 ganeti
-ganeti-2.10
-ganeti-htools-2.10
-ganeti-haskell-2.10
+ganeti-2.15
+ganeti-htools-2.15
+ganeti-haskell-2.15
 ganeti-instance-debootstrap
 smartmontools
 hdparm
@@ -27,7 +26,6 @@ sysstat
 libruby
 psmisc
 git
-ntfsprogs
 ntfs-3g
 mbr
 patch
@@ -38,7 +36,6 @@ lsb-release
 acpi-support-base
 ipcalc
 mc
-usbmount
 console-setup
 chrony
 pwgen
@@ -55,3 +52,7 @@ yum
 nmap
 wget
 htop
+parted
+python-cffi-backend
+man-db
+aptitude

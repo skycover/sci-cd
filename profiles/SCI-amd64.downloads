@@ -54,57 +54,49 @@ squidguard
 nginx
 
 # traffic statistics
-lightsquid
+#lightsquid
 bandwidthd
 
 # apache2
 apache2
-apache2-mpm-prefork
-apache2-mpm-worker
 apache2-utils
-apache2.2-bin
-apache2.2-common
+apache2-bin
 
 # php5
-libapache2-mod-php5
-php5
-php5-cli
-php5-common
-php5-curl
-php5-gd
-php5-imap
-php5-intl
-php5-ldap
-php5-mcrypt
-php5-mysql
-php5-pgsql
-php5-pspell
-php5-fpm
+libapache2-mod-php
+php
+php-cli
+php-common
+php-curl
+php-gd
+php-imap
+php-intl
+php-ldap
+php-mcrypt
+php-mysql
+php-pgsql
+php-pspell
+php-fpm
 
 # mysql
-libdbd-mysql-perl
-libmysqlclient18
-mysql-client-5.5
 mysql-common
-mysql-server-5.5
-mysql-server-core-5.5
+mariadb-client-10.1
+mariadb-server-10.1
+mariadb-server-core-10.1
 
 # bacula
 bacula-common
-bacula-common-sqlite3
 bacula-console
-bacula-director-common
+bacula-director
 bacula-director-sqlite3
 bacula-fd
 bacula-sd
-bacula-sd-sqlite3
 bacula-server
 
 # samba
 samba
 samba-common
 samba-common-bin
-smbldap-tools
 
 # ldap
 ldap-utils
@@ -116,21 +108,14 @@ slapd
 
 # postgresql
 postgresql
-postgresql-9.1
-postgresql-client-9.1
+postgresql-9.6
+postgresql-client-9.6
 postgresql-client-common
 postgresql-common
 postgresql-contrib
-postgresql-contrib-9.1
+postgresql-contrib-9.6
 
 # dovecot
-dovecot-common
 dovecot-imapd
 dovecot-pop3d
-
-# partition utils
-parted
-
-# videoserver
-zoneminder
 

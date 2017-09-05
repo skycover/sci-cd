@@ -22,8 +22,8 @@ fi
 
 mkdir -p usbkey
 cd usbkey
-test -f initrd.gz || wget http://ftp.uk.debian.org/debian/dists/wheezy/main/installer-amd64/current/images/hd-media/initrd.gz
-test -f vmlinuz || wget http://ftp.uk.debian.org/debian/dists/wheezy/main/installer-amd64/current/images/hd-media/vmlinuz
+test -f initrd.gz || wget http://ftp.uk.debian.org/debian/dists/stretch/main/installer-amd64/current/images/hd-media/initrd.gz
+test -f vmlinuz || wget http://ftp.uk.debian.org/debian/dists/stretch/main/installer-amd64/current/images/hd-media/vmlinuz
 # this is not obligate and will erase all the contents
 #mkdosfs ${d}1
 syslinux ${d}1

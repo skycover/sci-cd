@@ -79,7 +79,7 @@ if [ -z "$disks" ]; then
   (cd src/chose-partman-recipe; fakeroot dpkg-buildpackage)
   mkdir -p local
   cp src/chose-partman-recipe*.udeb local
-  test -d tmp/mirror && (cd tmp/mirror; reprepro remove wheezy chose-partman-recipe)
+  test -d tmp/mirror && (cd tmp/mirror; reprepro remove stretch chose-partman-recipe)
 else
 
   echo Auto apply single user-predefined layout

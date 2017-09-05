@@ -12,6 +12,6 @@ EOF
 fi
 mkdir -p gplpv/meadowcourt
 cd gplpv/meadowcourt
-test "$1" = "-n" || test "$1" = "-t" -a -n "$(ls -A)" ||  wget -r --no-parent -l1 -nd http://www.meadowcourt.org/downloads/
+test "$1" = "-n" || test "$1" = "-t" -a -n "$(ls -A)" ||  wget -r --no-parent -l1 -nd http://updates.software-univention.de/download/addons/gplpv-drivers/
 cd ..
 genisoimage -o gplpv.iso -R -J -hfs meadowcourt
