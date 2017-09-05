@@ -56,3 +56,7 @@ parted
 python-cffi-backend
 man-db
 aptitude
+sysv-rc
+initscripts
+sysvinit-core
+sysvinit-utils

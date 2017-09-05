@@ -436,6 +436,14 @@ EOF
 ## Set vim disable defaults for 8.0
 sed -i 's/\" let g:skip_defaults_vim = 1/let g:skip_defaults_vim = 1/' $TARGET/etc/vim/vimrc
 
+## Remove systemd
+apt-get install -y --force-yes sysvinit-core sysvinit-utils
+cp "$TARGET/usr/share/sysvinit/inittab" "$TARGET/etc/inittab"
+chroot "$TARGET" apt-get remove -y --force-yes --purge --auto-remove systemd
+echo -e 'Package: systemd\nPin: release *\nPin-Priority: -1' > "$TARGET/etc/apt/preferences.d/systemd"
+echo -e '\n\nPackage: *systemd*\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
+echo -e '\nPackage: systemd:i386\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
+
 
 ## Set chrony reboot if there is no sources
 
