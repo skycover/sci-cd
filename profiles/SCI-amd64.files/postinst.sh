@@ -68,6 +68,10 @@ fi
 ## Set PermitRoolLogin=yes in ssd_config
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' $TARGET/etc/ssh/sshd_config
 
+## Enable ssh-dss keys support
+echo "    PubkeyAcceptedKeyTypes=+ssh-dss" >> $TARGET/etc/ssh/ssh_config
+echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> $TARGET/etc/ssh/sshd_config
+
 ## Set /var/log/kern.log to unbuffered mode
 
 ./strreplace.sh $target/etc/rsyslog.conf "^kern\.\*[\t ]+-\/var\/log\/kern.log" 'kern.*\t\t\t\t/var/log/kern.log'
