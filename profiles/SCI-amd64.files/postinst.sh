@@ -72,6 +72,10 @@ sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' $TARGET/etc/s
 echo "    PubkeyAcceptedKeyTypes=+ssh-dss" >> $TARGET/etc/ssh/ssh_config
 echo "PubkeyAcceptedKeyTypes=+ssh-dss" >> $TARGET/etc/ssh/sshd_config
 
+## Correct ext4 optional features to work with wheezy
+sed -i 's/features = has_journal,extent,huge_file,flex_bg,metadata_csum,64bit,dir_nlink,extra_isize/features = has_journal,extent,huge_file,flex_bg,uninit_bg,dir_nlink,extra_isize/g' $TARGET/etc/mke2fs.conf
+sed -i 's/features = has_journal,extent,huge_file,flex_bg,metadata_csum,inline_data,64bit,dir_nlink,extra_isize/features = has_journal,extent,huge_file,flex_bg,uninit_bg,dir_nlink,extra_isize/g' $TARGET/etc/mke2fs.conf
+
 ## Set /var/log/kern.log to unbuffered mode
 
 ./strreplace.sh $target/etc/rsyslog.conf "^kern\.\*[\t ]+-\/var\/log\/kern.log" 'kern.*\t\t\t\t/var/log/kern.log'
