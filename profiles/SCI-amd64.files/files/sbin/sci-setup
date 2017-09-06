@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 usage(){
   cat <<EOF
@@ -187,6 +187,8 @@ read NODE1_NETDEV NODE1_MASK <<EOF
 `check_ip $NODE1_IP`
 EOF
 
+# correct variable
+NODE1_NETDEV=`echo $NODE1_NETDEV|cut -d ':' -f 1`
 check_netdev $NODE1_NETDEV NODE1_NETDEV
 
 if [ -z "$NODE1_LAN_IP" ]; then
@@ -199,6 +201,8 @@ if [ -n "$NODE1_LAN_IP" ]; then
   read NODE1_LAN_NETDEV NODE1_LAN_MASK <<EOF
 `check_ip $NODE1_LAN_IP`
 EOF
+  # correct variable
+  NODE1_LAN_NETDEV=`echo $NODE1_LAN_NETDEV|cut -d ':' -f 1`
   check_netdev $NODE1_LAN_NETDEV NODE1_LAN_NETDEV
   if [ "`echo $NODE1_LAN_NETDEV|cut -d ':' -f 1`" != "lan" ]; then
     echo Network device for LAN should be named '"'lan'"', but got '"'$NODE1_LAN_NETDEV'"'. Aborting.
@@ -292,6 +296,8 @@ if [ -n "$NODE1_LAN_IP" ]; then
   fi
 fi
 
+# correct variable
+MASTER_NETDEV=`echo $MASTER_NETDEV|cut -d ':' -f 1`
 test -n "$MASTER_NETDEV" && check_netdev $MASTER_NETDEV MASTER_NETDEV
 
 if [ -n "$CLU_NETDEV" ]; then
@@ -463,6 +469,10 @@ fi
 
 echo Fulfilling default /etc/ganeti/networks
 
+# correct variable
+NODE1_NETDEV=`echo $NODE1_NETDEV|cut -d ':' -f 1`
+NODE1_LAN_NETDEV=`echo $NODE1_LAN_NETDEV|cut -d ':' -f 1`
+
 for_networks $NODE1_IP $NODE1_MASK $NODE1_NETDEV >/etc/ganeti/networks
 if [ -n "$NODE1_SAN_IP" ]; then
   for_networks $NODE1_SAN_IP $NODE1_SAN_MASK >>/etc/ganeti/networks
@@ -604,9 +614,15 @@ fi
 read NODE1_NETDEV NODE1_MASK <<EOF
 `check_ip $NODE1_IP`
 EOF
+# correct variable
+NODE1_NETDEV=`echo $NODE1_NETDEV|cut -d ':' -f 1`
 check_netdev $NODE1_NETDEV NODE1_NETDEV
 
+# correct variable
+MASTER_NETDEV=`echo $MASTER_NETDEV|cut -d ':' -f 1`
 check_netdev $MASTER_NETDEV MASTER_NETDEV
+# correct variable
+LAN_NETDEV=`echo $LAN_NETDEV|cut -d ':' -f 1`
 check_netdev $LAN_NETDEV LAN_NETDEV
 
 cat <<EOF
