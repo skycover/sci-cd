@@ -60,3 +60,4 @@ sysv-rc
 initscripts
 sysvinit-core
 sysvinit-utils
+bash-completion
