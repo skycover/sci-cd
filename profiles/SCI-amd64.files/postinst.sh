@@ -4,7 +4,7 @@
 
 set -x
 
-VERSION=2.4
+VERSION=3.0
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 # XXX needed for handling around reloc_domain
@@ -47,6 +47,11 @@ for i in \
 do
  cp $target/$i backup
 done
+
+# mount proc and sys, mknod for loop
+mount -t proc proc /proc
+mount -t sysfs sys /sys
+mknod /dev/loop0 b 7 0
 
 ## Setting up default grub entry - 'Debian GNU/Linux, with Linux 2.6.*-xen-amd64 and XEN 4.0-*'
 dpkg-divert --divert /etc/grub.d/08_linux_xen --rename /etc/grub.d/20_linux_xen
@@ -386,7 +391,7 @@ if [ -n "$dev" -a -e "$dev" ]; then
 	echo "/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 
 	echo ...Adding repository data
-	mount /media/sci && (apt-cdrom -d=/media/sci add; umount /media/sci)
+	mount /media/sci && apt-cdrom -d=/media/sci add;
 else
 	echo Unable to find CD-ROM device
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
@@ -397,6 +402,13 @@ cp files/apt/sci-dev.list $target/root
 cp files/apt/apt.pub $target/etc/apt/sci-dev.pub
 apt-key add $target/etc/apt/sci-dev.pub
 
+## Remove systemd
+apt-get install -y --allow-downgrades --allow-remove-essential --allow-change-held-packages sysvinit-core sysvinit-utils
+cp "$TARGET/usr/share/sysvinit/inittab" "$TARGET/etc/inittab"
+apt-get remove -y --allow-downgrades --allow-remove-essential --allow-change-held-packages --purge --auto-remove systemd
+echo -e 'Package: systemd\nPin: release *\nPin-Priority: -1' > "$TARGET/etc/apt/preferences.d/systemd"
+echo -e '\n\nPackage: *systemd*\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
+echo -e '\nPackage: systemd:i386\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
 
 ## Symlink gplpv.iso with signed windows drivers to /stuff/cdimages
 # this file can also be found in /media/sci/simple-cdd/gplpv.iso
@@ -409,6 +421,7 @@ mkdir -p $target/stuff/export
 echo "/stuff/export   /var/lib/ganeti/export ext4 bind 0 0" >> $target/etc/fstab
 
 test -n "$proc_mounted" && umount /proc
+umount /media/sci
 umount /stuff
 
 ## Add ganeti hooks if any
@@ -439,14 +452,6 @@ EOF
 
 ## Set vim disable defaults for 8.0
 sed -i 's/\" let g:skip_defaults_vim = 1/let g:skip_defaults_vim = 1/' $TARGET/etc/vim/vimrc
-
-## Remove systemd
-apt-get install -y --force-yes sysvinit-core sysvinit-utils
-cp "$TARGET/usr/share/sysvinit/inittab" "$TARGET/etc/inittab"
-chroot "$TARGET" apt-get remove -y --force-yes --purge --auto-remove systemd
-echo -e 'Package: systemd\nPin: release *\nPin-Priority: -1' > "$TARGET/etc/apt/preferences.d/systemd"
-echo -e '\n\nPackage: *systemd*\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
-echo -e '\nPackage: systemd:i386\nPin: release *\nPin-Priority: -1' >> "$TARGET/etc/apt/preferences.d/systemd"
 
 
 ## Set chrony reboot if there is no sources

@@ -7,3 +7,8 @@ local
 gplpv
 gitsrc
 src/chose-partman-recipe/debian/chose-partman-recipe.debhelper.log
+src/chose-partman-recipe/debian
+src/sci-finish-install/debian
+src/sci-finish-install/debian/sci-finish-install.debhelper.log
+src/chose-partman-recipe_0.1_amd64.buildinfo
+src/sci-finish-install_0.1_amd64.buildinfo

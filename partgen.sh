@@ -116,7 +116,7 @@ EOF
   if [ -n "$partlvm" ]; then
     cat <<EOF
 # was unable to do in-target mount /stuff, so it woll done in postinst.sh
-d-i preseed/late_command string vgcreate xenvg /dev/$lvmvol && lvcreate -L 20G -n system-stuff xenvg && mkfs.ext4 /dev/xenvg/system-stuff && echo "/dev/xenvg/system-stuff /stuff ext4 errors=remount-ro 0 0" >>/target/etc/fstab && mkdir /target/stuff
+d-i preseed/late_command string vgcreate --yes xenvg /dev/$lvmvol && lvcreate --yes -L 20G -n system-stuff xenvg && mkfs.ext4 /dev/xenvg/system-stuff && echo "/dev/xenvg/system-stuff /stuff ext4 errors=remount-ro 0 0" >>/target/etc/fstab && mkdir /target/stuff
 EOF
   fi
   ;;

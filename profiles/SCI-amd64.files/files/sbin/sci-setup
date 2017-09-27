@@ -678,10 +678,10 @@ if ! [ -d /media/sci/pool/main ]; then
 fi
 
 if [ -n "$NODE2_NAME" ]; then
-  gnt-instance add -t drbd -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME:$NODE2_NAME --no-name-check --no-ip-check $SCI_NAME
+  gnt-instance add -t drbd -o debian+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME:$NODE2_NAME --no-name-check --no-ip-check $SCI_NAME
 else
   echo "WARNING! Creating the service instance without fallback support. This is strongly not recommended for production use!"
-  gnt-instance add -t plain -o debootstrap+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME --no-name-check --no-ip-check $SCI_NAME
+  gnt-instance add -t plain -o debian+sci -s 10g -B memory=512m --net=0:link=$NODE1_NETDEV,ip=$SCI_IP $LANIF -n $NODE1_NAME --no-name-check --no-ip-check $SCI_NAME
 fi
 
 cat <<EOF >/etc/resolv.conf
@@ -824,7 +824,7 @@ mv $ifs.new $ifs
 
 echo Up and test backbone
 ifup backbone
-if ifconfig backbone|grep 'inet addr:'; then
+if ifconfig backbone|grep "inet 10.101.200.$((10+$nodenum))"; then
     echo ok.
 else
     echo Interface backbone not UP. Something wrong. Aborting.

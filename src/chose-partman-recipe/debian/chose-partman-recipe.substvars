@@ -1,1 +1,2 @@
 misc:Depends=cdebconf-udeb
+misc:Pre-Depends=
