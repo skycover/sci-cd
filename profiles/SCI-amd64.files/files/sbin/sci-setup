@@ -495,7 +495,6 @@ if [ -n "$NODE1_SAN_IP" ]; then
  SECONDARY_IP="-s $NODE1_SAN_IP"
 fi
 gnt-cluster init --enabled-hypervisors=xen-pvm,xen-hvm --nic-parameters link=`echo $LAN_NETDEV|cut -d ':' -f 1` --master-netdev `echo $MASTER_NETDEV|cut -d ':' -f 1` $SECONDARY_IP $CLUSTER_NAME
-# XXX in ganeti 2.6 should be added: --master-netmask $MASTER_NETMASK
 test $? -eq 0 || (echo Something wrong on cluster init; exit 1)
 
 echo Tuning cluster
@@ -504,6 +503,13 @@ gnt-cluster modify --hypervisor-parameters xen-hvm:use_localtime=true,kernel_pat
 test $? -eq 0 || (echo Something wrong on first modify; exit 1)
 gnt-cluster modify --ipolicy-bounds-specs=min:disk-size=0,cpu-count=1,disk-count=0,memory-size=1,nic-count=0,spindle-use=0/max:disk-size=4192256,cpu-count=128,disk-count=32,memory-size=1048576,nic-count=32,spindle-use=12
 test $? -eq 0 || (echo Something wrong on second modify; exit 1)
+
+# generate rapi password for sci webinterface
+rapipasswd=`pwgen -1`
+touch /var/lib/ganeti/rapi/users
+chmod 640 /var/lib/ganeti/rapi/users
+chown gnt-rapi:gnt-masterd /var/lib/ganeti/rapi/users
+echo "scweb $rapipasswd write" > /var/lib/ganeti/rapi/users
 
 # tuning lvm filter. if you don't use md, comment it
 if (pvs|grep xenvg|grep -q md) then
