@@ -1,0 +1,423 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+
+help_text = u'''
+sci-instance {command} [options...] [argument]
+Commands:
+    create|add [options] vmname - create new virtual machine
+    shutdown|stop vmname - shutdown vm
+    start|startup vmname - start vm
+    restart|reboot vmname - restart vm
+    migrate vmname - migrate vm
+    failover vmname - failover vm
+    list - list virtual machines
+    info vmname - info about vm
+    help {command} - info about command
+'''
+ADD_ARGS = [
+    'os', 'net', 'mem', 'cpu', 'cdrom', 'node', 'disk',
+]
+DO_NOT_RUN = False
+
+
+def update_parameter(*targs):
+    from re import sub, match
+    if '--do-not-run' in targs:
+        global DO_NOT_RUN
+        DO_NOT_RUN = True
+    ret = [
+        sub('=', ':', sub('^--', '', arg, 1), 1) if match(
+            r'(^[-]{2})?(' + r'|'.join(ADD_ARGS) + r')',
+            arg
+        ) else arg
+        for arg in targs
+        if arg != '--do-not-run'
+    ]
+    if ret[0] in ('start', 'startup'):
+        ret[0] = 'startup'
+    elif ret[0] in ('shutdown', 'stop'):
+        ret[0] = 'shutdown'
+    elif ret[0] in ('reboot', 'restart'):
+        ret[0] = 'restart'
+    elif ret[0] in ('add', 'create'):
+        ret[0] = 'add'
+    elif ret[0] in ('remove', 'delete'):
+        ret[0] = 'remove'
+    return ret
+
+
+class UnexpectedCommand(Exception):
+    pass
+
+
+class UnexpectedRunMethod(Exception):
+    pass
+
+
+class DoNotUnderstand(Exception):
+    pass
+
+
+class CreateInstance:
+    os_types = {
+        'debian': 'debootstrap+default',
+        'wheezy': 'debootstrap+default',
+        'windows': 'windows+default',
+        'win7': 'windows+default',
+        'win2008': 'windows+default',
+        'jessie': 'debootstrap+jessie',
+        'squeeze': 'debootstrap+squeeze',
+        'solaris': 'solaris+default',
+        'ubuntu': 'ubootstrap+default',
+        'trusty': 'ubootstrap+default',
+        'precise': 'ubootstrap+precise',
+        'centos': 'yumbootstrap+default',
+    }
+
+    os_list = {
+        'linux': [
+            'debian', 'wheezy', 'jessie', 'squeeze', 'solaris', 'ubuntu',
+            'trusty', 'precise', 'centos'
+        ],
+        'windows': [
+            'windows', 'win7',
+        ],
+        'windows_server': ['win2008'],
+    }
+
+    def_config = {
+        'linux': {
+            'mem': '512M',
+            'cpu': 1,
+            'disk': ['4G', ],
+            'cdrom': None
+        },
+        'windows': {
+            'mem': '2G',
+            'disk': ['20G', ],
+            'cpu': 2,
+            'cdrom': 'win7.iso'
+        },
+        'windows_server': {
+            'mem': '3G',
+            'disk': ['40G', ],
+            'cpu': 4,
+            'cdrom': 'win2008r2.iso'
+        },
+    }
+
+    def __init__(self, name, **kwargs):
+        import os
+        self.name = name
+        self.net = kwargs.get('net', ['lan'])
+        for os_type, os_list in self.os_list.items():
+            os_ = kwargs.get('os', 'debian')
+            if os_ in os_list:
+                self.os = self.os_types[os_]
+                for key, default in self.def_config[os_type].items():
+                    setattr(self, key, kwargs.get(key, default))
+                break
+        else:
+            raise KeyError('There is no such os')
+        self.node = kwargs.get(
+            'node', [os.uname()[1].split('.')[0]]
+        )
+
+    def shell_command(self):
+        command = \
+            'gnt-instance add -t {disk_type} -o {os} {cdrom} {disks} ' \
+            '{net} -B memory={mem},vcpus={cpu} --print-jobid ' \
+            '--no-ip-check --no-name-check -n {node} {name}'.format(
+                disk_type='plain' if len(self.node) == 1 else 'drbd',
+                os=self.os, name=self.name,
+                cdrom='-H xen-hvm:cdrom_image_path=/stuff/cdimages/%s,'
+                      'boot_order=cd,disk_type=ioemu,'
+                      'use_localtime=true' % self.cdrom if self.cdrom else '',
+                disks=' '.join([
+                    '--disk {}:size={},vg=xenvg'.format(num, size)
+                    for num, size in enumerate(self.disk)
+                ]), mem=self.mem, cpu=self.cpu, node=':'.join(self.node),
+                net=' '.join([
+                    '--net {}:link={}'.format(num, link)
+                    for num, link in enumerate(self.net)
+                ])
+            )
+        return command
+
+
+class ModifyInstance(CreateInstance):
+    pass
+
+
+class Command:
+
+    def __init__(self, command=None, *targs):
+        self._command = command
+        self._targs = targs
+
+    @property
+    def command(self):
+        try:
+            return getattr(
+                self,
+                '_command__{}_'.format(self._command)
+            )(*self._targs)
+        except AttributeError:
+            raise UnexpectedCommand(
+                'There is no such command as %s' % self._command)
+        except KeyError:
+            raise DoNotUnderstand('???')
+        else:
+            raise KeyError('Wtf')
+
+    def run(self, type=None, *pargs, **kwargs):
+        try:
+            if type is None:
+                return getattr(
+                    self,
+                    '_run__{}_'.format(self._command)
+                )(self.command, *pargs, **kwargs)
+            else:
+                return getattr(self, type)(self.command, *pargs, **kwargs)
+        except:
+            return 'Error: on run'
+
+    @staticmethod
+    def just_run(command, *targs, **kwargs):
+        from subprocess import Popen
+        from sys import stdout, stderr, stdin
+        p = Popen(command, stdin=stdin, stdout=stdout, stderr=stderr)
+        p.wait()
+        return ''
+
+    @staticmethod
+    def get_output(command, *targs, **kwargs):
+        from subprocess import check_output
+        return check_output(command)
+
+    @staticmethod
+    def all_output(command, timeout=2, withErrors=False, *targs, **kwargs):
+        from subprocess import Popen, PIPE
+        from threading import Timer
+        p = Popen(command, stderr=PIPE, stdout=PIPE)
+        if timeout:
+            timer = Timer(timeout, lambda proc: proc.kill(), [p])
+            timer.start()
+        try:
+            out, err = p.communicate()
+        finally:
+            if timeout:
+                timer.cancel()
+            return (out, err) if withErrors else out
+
+    def __call__(self, raw=False, *pargs, **kwargs):
+        cmd = self._command
+        try:
+            command = getattr(self, '_command__%s_' % cmd)(*self._targs)
+            if DO_NOT_RUN or kwargs.get('do_not_run', False):
+                return ' '.join(command)
+            data = self.run(*pargs, **kwargs)
+            return data if raw or kwargs.get('type', False) else self.parse(data)
+        except AttributeError:
+            return help_text
+
+    def parse(self, data):
+        try:
+            return getattr(self, '_parse__%s_' % self._command)(data)
+        except AttributeError:
+            return data
+
+    # info
+    @staticmethod
+    def _command__info_(*args):
+        if len(args) > 1 or not any(args):
+            raise KeyError('Except one argument')
+        return 'gnt-instance', 'info', args[0]
+
+    @classmethod
+    def _run__info_(cls, command):
+        return cls.get_output(command)
+
+    @staticmethod
+    def _parse__info_(data):
+        import re
+        patterns = [
+            'Instance name',
+            'State', 'Console connection',
+            'Hypervisor:', 'cdrom_image_path',
+            'boot_order', 'vnc_password_file',
+            'memory', 'vcpus', 'nic/', 'link', 'MAC',
+            'Disks template', '- disk/[0-9]: [a-z]+, size [0-9\.]+[A-Z]',
+            '- primary:', 'secondaries: [a-zA-Z0-9.-]+ ',
+        ]
+        ret = '\n'.join(re.findall('.*|.*'.join(patterns), data))
+        ret = re.sub('[\n \t]+MAC:|[\n\t ]+ link:', ' ', ret)
+        ret = re.sub(r'\n[ \t\-]+', '\n', ret)
+        return ret
+
+    # jobinfo
+    @staticmethod
+    def _command__jobinfo_(*targs):
+        return ('gnt-job', 'info') + targs
+
+    # list
+    @staticmethod
+    def _command__list_(*targs):
+        if any(targs):
+            raise KeyError('Must be without args')
+        return 'gnt-instance', 'list'
+
+    @classmethod
+    def _run__list_(cls, command):
+        return cls.get_output(command)
+
+    @staticmethod
+    def _parse__list_(data, columns=(0, 2, 3, 4, 5)):
+        from re import split
+        ret = []
+        sizes = []
+        for n, line in enumerate(data.split('\n')[:-1]):
+            line_list = [
+                s.split('.')[0] if i == 3 and n else 'Node' if i == 3 else s
+                for i, s in enumerate(split(r'[ \t]+', line))
+            ]
+            sizes = [
+                max(sizes[i], len(s)) for i, s in enumerate(line_list)
+            ] if n else [len(s) for s in line_list]
+            ret.append(line_list)
+        return '\n'.join(
+            ' '.join(
+                [
+                    '{s:<{size}}'.format(s=s, size=sizes[i])
+                    for i, s in enumerate(line)
+                    if i in columns
+                ]
+            ) for line in ret
+        )
+
+    # add
+    @staticmethod
+    def _command__add_(*args):
+        from re import split
+        if len(args) < 1:
+            raise KeyError('missing arguments')
+        instance_config = {
+            arg.split(':')[0]: (
+                arg.split(':')[1].split(',') if arg.split(':')[0] not in [
+                    'cdrom', 'os', 'mem', 'cpu'
+                ] else arg.split(':')[1]
+            )
+            for arg in args[:-1]
+        }
+        i = CreateInstance(args[-1], **instance_config)
+        return split('[ ]+', i.shell_command())
+
+    def _run__add_(self, command):
+        out = self.all_output(command)
+        from re import search
+        try:
+            data = out.split('\n', 1)[0]
+            if search(r'^[0-9]+$', data):
+                return data
+            else:
+                raise 'Ooooops! I dont find job-id'
+        except:
+            return 'Something wrong in _run__add_'
+        return ''
+
+    # restart
+    @staticmethod
+    def _command__restart_(*args):
+        if not any(args):
+            raise KeyError('A you fogot instance name?')
+        return [
+            ('gnt-instance', 'shutdown', '--submit', args[0]),
+            ('gnt-instance', 'startup', '--submit', args[0])
+        ]
+
+    @classmethod
+    def _run__restart_(cls, commands):
+        ret = ''.join([
+            ''.join(cls.all_output(command, withErrors=True))
+            for command in commands
+        ])
+        return ret
+
+    # remove
+    @staticmethod
+    def _command__remove_(*args):
+        if not any(args):
+            raise KeyError('Except one argument')
+        return 'gnt-instance', 'remove', args[0]
+
+    @classmethod
+    def _run__remove_(cls, command):
+        return cls.just_run(command)
+
+    # shutdown
+    @staticmethod
+    def _command__shutdown_(*targs):
+        return ('gnt-instance', 'shutdown', '--submit') + targs
+
+    @classmethod
+    def _run__shutdown_(cls, command):
+        return cls.just_run(command)
+
+    # start
+    @staticmethod
+    def _command__start_(*targs):
+        return ('gnt-instance', 'startup') + targs
+
+    @classmethod
+    def _run__start_(cls, command):
+        return cls.just_run(command)
+
+    # migrate
+    @staticmethod
+    def _command__migrate_(*targs):
+        return ('gnt-instance', 'migrate') + targs
+
+    @classmethod
+    def _run__migrate_(cls, command):
+        return cls.just_run(command)
+
+    # failover
+    @staticmethod
+    def _command__failover_(*targs):
+        return ('gnt-instance', 'failover') + targs
+
+    @classmethod
+    def _run__failover_(cls, command):
+        return cls.just_run(command)
+
+    # help
+    @staticmethod
+    def _command__help_(*targs):
+        return targs[0]
+
+    @classmethod
+    def _run__help_(cls, name):
+        help_text = {
+            'add': """
+    Options
+            """
+        }
+
+
+    # TODO: modify + grow-disk
+
+
+if __name__ == '__main__':
+    import os
+    import sys
+    try:
+        args = update_parameter(*sys.argv[1:])
+        if not any(args):
+            print help_text
+        else:
+            cmd = Command(*args)
+            print cmd()
+    except IndexError:
+        print 'Ooops!'
+        print help_text
