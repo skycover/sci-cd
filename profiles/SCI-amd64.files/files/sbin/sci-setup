@@ -42,9 +42,9 @@ check_ip(){
   addr=$2
   if(addr == ip){
     for(i=1; i<=NF; i++){
-      if($i ~ /^netmask /){
-        split($i,M,"\t")
-        mask=M[2]
+      if($i ~ /^netmask.*/){
+        split($0,M," ")
+        mask=M[4]
       }
     }
     print iface, mask

@@ -119,3 +119,5 @@ postgresql-contrib-9.6
 dovecot-imapd
 dovecot-pop3d
 
+# inetd
+openbsd-inetd
