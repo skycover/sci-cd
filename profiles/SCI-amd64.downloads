@@ -121,3 +121,6 @@ dovecot-pop3d
 
 # inetd
 openbsd-inetd
+
+# entropy generator
+rng-tools
