@@ -450,6 +450,10 @@ For more information see http://www.skycover.ru
 
 EOF
 
+## enable puppet
+update-rc.d -f puppet remove
+update-rc.d -f puppet defaults
+
 ## Set vim disable defaults for 8.0
 sed -i 's/\" let g:skip_defaults_vim = 1/let g:skip_defaults_vim = 1/' $TARGET/etc/vim/vimrc
 
