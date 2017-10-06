@@ -695,6 +695,7 @@ search $DOMAIN_NAME
 nameserver $SCI_IP
 EOF
 gnt-cluster copyfile /etc/resolv.conf
+gnt-cluster copyfile /etc/sci/sci.conf
 
 ;;
 
