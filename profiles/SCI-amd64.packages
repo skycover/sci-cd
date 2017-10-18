@@ -62,3 +62,8 @@ sysvinit-core
 sysvinit-utils
 bash-completion
 gawk
+python-django
+nginx
+python-requests
+uwsgi
+uwsgi-plugin-python
