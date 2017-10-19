@@ -67,3 +67,6 @@ nginx
 python-requests
 uwsgi
 uwsgi-plugin-python
+javascript-common
+libjs-jquery
+sci-web

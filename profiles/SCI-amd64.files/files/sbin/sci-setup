@@ -510,6 +510,10 @@ touch /var/lib/ganeti/rapi/users
 chmod 640 /var/lib/ganeti/rapi/users
 chown gnt-rapi:gnt-masterd /var/lib/ganeti/rapi/users
 echo "scweb $rapipasswd write" > /var/lib/ganeti/rapi/users
+if [ -e /opt/sci-web/sci_webinterface/settings.py ]; then
+	sed -i "s/scpassword/$rapipasswd/" /opt/sci-web/sci_webinterface/settings.py
+fi
+
 
 # tuning lvm filter. if you don't use md, comment it
 if (pvs|grep xenvg|grep -q md) then
