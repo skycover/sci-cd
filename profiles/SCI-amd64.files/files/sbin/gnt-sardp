@@ -2,7 +2,7 @@
 workdir="/var/lib/ganeti"
 configfile="$workdir/config.data"
 configfile_obr=/tmp/config.data.$$
-temp_file=/tmp/gnt-iostat.$$
+temp_file=/tmp/gnt-sardp.$$
 
 function get_instances {
 	cat $configfile_obr | awk -F ':|"|,' 'BEGIN {
@@ -79,55 +79,51 @@ get_instances | while read i; do
                 gsub("-","--", $3)
                 printf("%s %s-%s %s\n",disk[2],$2,$3,$4)
         }' > $temp_file
+disks_print=$(ls -l /dev/mapper | awk -v filename1="$temp_file" '{
+                                        while ((getline k < filename1)>0){
+                                                split(k,line," ")
+                                                if(line[2] == $9) dc++
+                                                }
+                                        close (filename1)
+                                        } END {
+                                                print dc
+                                        }')
+
 disks_count=$(cat $temp_file | wc -l)
 [[ $disks_count == 0 ]] && {
-        echo "on this cluster was not found used lvs"
+        echo "on this node was not found runned instance"
         exit
 }
-disks_print=$(ls -l /dev/mapper | awk -v filename1="$temp_file" '{
-					while ((getline k < filename1)>0){
-						split(k,line," ")
-						if(line[2] == $9) dc++
-						}
-					close (filename1)
-					} END {
-						print dc
-					}')
-					
-iostat -N $* |  awk -v filename="$temp_file" -v disks_print=$disks_print ' {
+sar -dp $* |  awk -v filename="$temp_file" -v disks_print="$disks_print" ' {
         while ((getline l < filename)>0){
                         split(l,s," ")
-                        if ($1==s[2]) {
-                                $1=s[1]
-                                gsub(/,/,".")
-                                printf("%-30s %12s %12s %12s %12s %12s \n",$1,$2,$3,$4,$5,$6)
-				for ( i=2 ; i<=6 ; i++) sum[i]+=$(i)
-				disk_printed++
+                        if ($2==s[2]) {
+                                if (time!=$1) {
+                                        print "================================================================================================================================================="
+                                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n"," ","DEV","tps","rd_sec/s","wr_sec/s","avgrq-sz","avgqu-sz","await","svctm","%util")
+                                time=$1
+				for (i=3;i<=10; i++) { 
+						sum[i]=0
+						max[i]=0
+					}
+                                }
+                                $2=s[1]
+				gsub(/,/,".")
+				for (i=3;i<=10; i++) sum[i]+=$(i)
+				for (i=3;i<=10; i++) if (max[i]<$(i)) max[i]=$(i)
+                                printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+				diskprint++
                         }
-
-        }
+                }
         close(filename)
-        }
-	/^avg-cpu/ {
-                print $0
 	}
-	/^[[:space:]]/ {
-                print $0
-	}
-	/^Device/ {
-                printf("%-30s %12s %12s %12s %12s %12s \n","Disk:","tps","kB_read/s","kB_wrtn/s","kB_read","kB_wrtn")
-                print "==============================================================================================="
-        } 
-	{	
-			if (disks_print == disk_printed) {
-			printf("%-30s ", "TOTAL")
-                        for ( i=2 ; i<=6; i++ ) {
-                                printf("%12s ",sum[i])
-                                sum[i]=0
-                        }
-                        disk_printed=0
-                        printf("\n")
+	{
+		if (diskprint==disks_print){
+			diskprint=0
+			print "_________________________________________________________________________________________________________________________________________________"
+                	printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
 		}
+        
 	}'
 
 rm $temp_file
