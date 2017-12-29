@@ -1,0 +1,145 @@
+#!/bin/bash
+#set -x
+workdir="/var/lib/ganeti"
+configfile="$workdir/config.data"
+configfile_obr=/tmp/config.data.$$
+temp_file=/tmp/gnt-sardp.$$
+
+function get_instances {
+	cat $configfile_obr | awk -F ':|"|,' 'BEGIN {
+			inst=0
+		}
+		{ 
+			if ($0 ~ "instances") {
+				inst=1
+				nics=0
+			}
+			if ($0 ~ "networks") inst=0
+			if (inst == 1 && $0 ~ "name") {
+				printf("%s ",$(NF-2))
+			}
+			if ($0 ~ "osparams_private") nics=1
+			if (inst ==1 && $0 ~ "uuid" && nics == 1) {
+				printf ("%s \n",$(NF-1))
+				nics=0
+				
+			}
+		}'
+}
+function get_dguid {
+	cat $configfile_obr | awk -F ':|"|,' -v inst_name=$1 -v inst_uuid=$2 'BEGIN {
+			this_inst=0
+			diskstart=0
+		}
+		{
+			if ($0 ~ "instances") {
+                                instan=1
+                                nics=0
+                        }
+			if ($0 ~ "networks") instan=0
+			if (instan == 1) {
+				if($0 ~ "disks_active" && this_inst==1){
+					diskstart=0 
+					exit
+				}
+				if ($0 ~ inst_uuid) this_inst=1
+				if($0 ~ "disks" && this_inst==1) diskstart=1
+				if(this_inst==1 && diskstart==1 && $0 ~ '/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/') printf("%s %s\n",inst_name,$2)
+			}
+		}'
+}
+function get_vg {
+	cat $configfile_obr | awk -F ':|"|,' -v duid=$2 -v inst_name=$1 '{
+		if ($0 ~ duid && $0 !~ "uuid") {
+			this_disk=1
+		}
+		if ($0 ~ duid && $0 ~ "uuid" ) this_disk=0
+		if (str_count == 1) {
+			str_count=0
+			if($0 !~ "_meta") printf ("%s %s %s\n",inst_name,vg,$2)
+		}
+					
+		if (str_count == 2 ) {
+			vg=$2
+			str_count=1
+		}
+		if ($0 ~ "dev_type" && $5 == "drbd" && this_disk == 1) this_disk=0
+		if (this_disk == 1 && $0 ~ "logical_id") str_count=2
+		}'
+}
+trap ' rm $temp_file; rm $configfile_obr ;exit 1' 2 3 15
+cat /var/lib/ganeti/config.data |python -m json.tool > $configfile_obr
+get_instances | while read i; do
+	get_dguid $i | while read j;do
+		get_vg $j
+		done
+	done |awk '
+        {
+                printf("%s_",$1)
+                split($3,disk,"[._]")
+                gsub("-","--", $3)
+                printf("%s %s-%s %s\n",disk[2],$2,$3,$4)
+        }' > $temp_file
+disks_print=$(ls -l /dev/mapper | awk -v filename1="$temp_file" '{
+                                        while ((getline k < filename1)>0){
+                                                split(k,line," ")
+                                                if(line[2] == $9) dc++
+                                                }
+                                        close (filename1)
+                                        } END {
+                                                print dc
+                                        }')
+
+disks_count=$(cat $temp_file | wc -l)
+[[ $disks_count == 0 ]] && {
+        echo "on this node was not found runned instance"
+        exit
+}
+dig="nodynamic"
+if (echo $@ |grep -q '\<[0-9]*\>'); then
+        dig="dynamic"
+fi
+sar -dp $* |  awk -v filename="$temp_file" -v disks_print="$disks_print" -v sar_type="$dig" ' BEGIN {
+	time="00:00:01"
+	}	{
+        while ((getline l < filename)>0){
+                        split(l,s," ")
+                        if ($2==s[2]) {
+                                if (time != $1 && $2 != "DEV" ) {
+					if (sar_type == "nodynamic" && time !="00:00:01") {
+						print "_________________________________________________________________________________________________________________________________________________"
+			                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+					}
+                                        print "================================================================================================================================================="
+                                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n"," ","DEV","tps","rd_sec/s","wr_sec/s","avgrq-sz","avgqu-sz","await","svctm","%util")
+                                time=$1
+				for (i=3;i<=10; i++) { 
+						sum[i]=0
+						max[i]=0
+					}
+                                }
+                                $2=s[1]
+				gsub(/,/,".")
+				for (i=3;i<=10; i++) sum[i]+=$(i)
+				for (i=3;i<=10; i++) if (max[i]<$(i)) max[i]=$(i)
+                                printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+				diskprint++
+                        }
+                }
+        close(filename)
+	}
+	{
+		if (diskprint==disks_print && sar_type == "dynamic"){
+			diskprint=0
+			print "_________________________________________________________________________________________________________________________________________________"
+       	        	printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+		}
+	} END {
+		if (sar_type == "nodynamic") {
+			print "_________________________________________________________________________________________________________________________________________________"
+                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+		}
+        
+	}'
+rm $temp_file
+rm $configfile_obr
