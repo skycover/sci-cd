@@ -1,4 +1,5 @@
 #!/bin/bash
+#set -x
 workdir="/var/lib/ganeti"
 configfile="$workdir/config.data"
 configfile_obr=/tmp/config.data.$$
@@ -94,11 +95,21 @@ disks_count=$(cat $temp_file | wc -l)
         echo "on this node was not found runned instance"
         exit
 }
-sar -dp $* |  awk -v filename="$temp_file" -v disks_print="$disks_print" ' {
+dig="nodynamic"
+if (echo $@ |grep -q '\<[0-9]*\>'); then
+        dig="dynamic"
+fi
+sar -dp $* |  awk -v filename="$temp_file" -v disks_print="$disks_print" -v sar_type="$dig" ' BEGIN {
+	time="00:00:01"
+	}	{
         while ((getline l < filename)>0){
                         split(l,s," ")
                         if ($2==s[2]) {
-                                if (time!=$1) {
+                                if (time != $1 && $2 != "DEV" ) {
+					if (sar_type == "nodynamic" && time !="00:00:01") {
+						print "_________________________________________________________________________________________________________________________________________________"
+			                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+					}
                                         print "================================================================================================================================================="
                                         printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n"," ","DEV","tps","rd_sec/s","wr_sec/s","avgrq-sz","avgqu-sz","await","svctm","%util")
                                 time=$1
@@ -118,13 +129,17 @@ sar -dp $* |  awk -v filename="$temp_file" -v disks_print="$disks_print" ' {
         close(filename)
 	}
 	{
-		if (diskprint==disks_print){
+		if (diskprint==disks_print && sar_type == "dynamic"){
 			diskprint=0
 			print "_________________________________________________________________________________________________________________________________________________"
-                	printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+       	        	printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
+		}
+	} END {
+		if (sar_type == "nodynamic") {
+			print "_________________________________________________________________________________________________________________________________________________"
+                        printf("%9s %30s %12s %12s %12s %12s %12s %12s %12s %12s\n",time,"SUM/Worst",sum[3],sum[4],sum[5],max[6],max[7],max[8],max[9],max[10])
 		}
         
 	}'
-
 rm $temp_file
 rm $configfile_obr
