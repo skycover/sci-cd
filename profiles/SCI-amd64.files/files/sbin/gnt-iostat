@@ -3,7 +3,8 @@ workdir="/var/lib/ganeti"
 #workdir="/home/arkhipovis"
 #configfile="$workdir/config.data.new"
 configfile="$workdir/config.data"
-configfile_obr="/tmp/config.data.new"
+configfile_obr="/tmp/config.data.$$"
+temp_file="/tmp/gnt-iostat.$$"
 
 function get_struct_fromconfigfile {
 	# 1 - inbox file
@@ -78,6 +79,7 @@ function get_vgdisk_dm {
 get_struct_fromconfigfile $configfile > $configfile_obr
 node_uuid=$(get_node_uid $HOSTNAME)
 # define wks > disk > dm
+trap 'rm $temp_file; rm $configfile_obr ;exit 1' 2 3 15
 get_instances | while read i; do 
 	get_instance_disks "$i" | while read j;do
 		echo $i $j $(get_vgdisk_dm $j)
@@ -88,14 +90,14 @@ done | awk '
 		split($3,disk,"[._]")
 		printf("%s /dev/%s/%s %s\n",disk[2],$2,$3,$4)
 	}
-' > /tmp/dm2inst.list
-disks_count=$(cat /tmp/dm2inst.list | wc -l)
+' > $temp_file
+disks_count=$(cat $temp_file | wc -l)
 [[ $disks_count == 0 ]] && {
 	echo "on this node was not found runned instance"
 	exit 
 }
-iostat $* |  awk -v disks_count=$disks_count ' /^dm-/ {
-		while ((getline l < "/tmp/dm2inst.list")>0){
+iostat $* |  awk -v disks_count=$disks_count -v filename="$temp_file" ' /^dm-/ {
+		while ((getline l < filename )>0){
 			split(l,s," ")
 			if ($1==s[3]) {
 				$1=s[1]
@@ -105,7 +107,7 @@ iostat $* |  awk -v disks_count=$disks_count ' /^dm-/ {
 				disk_printed++
 			}
 		}
-        close("/tmp/dm2inst.list")
+        close(filename)
 	}
 	/^avg-cpu/ {
 		system("clear")
@@ -130,3 +132,5 @@ iostat $* |  awk -v disks_count=$disks_count ' /^dm-/ {
 			printf("\n")
 		}
 	}'
+rm $configfile_obr
+rm $temp_file
