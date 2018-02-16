@@ -17,38 +17,7 @@ if [ -f postinst.conf ]; then
  . postinst.conf
 fi
 
-if [ "$1" = "real" ]; then
- target=""
-else # prepare test environment
- if [ `id -u` -eq 0 ]; then
-   echo "Please don't run test mode as root, because it can modify your system accidentally!"
-   exit 1
- fi
- rm -rf target
- cp -a target-orig target
- target=target
- mkdir -p $target/etc/xen $target/usr/sbin $target/usr/share/ganeti $target/usr/lib/xen $target/usr/local/sbin
-fi
-
-cp -a real/* .
-
-mkdir -p backup
-for i in \
- /etc/network/interfaces \
- /etc/hosts \
- /etc/hostname \
- /etc/xen/xend-config.sxp \
- /etc/default/grub \
- /etc/default/puppet \
- /etc/default/xendomains \
- /etc/modules \
- /etc/rsyslog.conf \
- /etc/dhcp/dhclient.conf
-do
- cp $target/$i backup
-done
-
-# mount proc and sys, mknod for loop
+## mount proc and sys, mknod for loop
 mount -t proc proc /proc
 mount -t sysfs sys /sys
 mknod /dev/loop0 b 7 0
@@ -224,10 +193,6 @@ echo 8021q >>$target/etc/modules
 echo Editing puppet.conf
 sed -i '/\[main\]/ a\pluginsync = true' $target/etc/puppet/puppet.conf
 
-## Set DRBD resync speed auto adjustment
-cp files/drbd-sync-rate.init.d $target/etc/init.d/drbd-sync-rate
-update-rc.d drbd-sync-rate defaults >/dev/null
-
 ## Enable puppet to start
 
 echo Setting up defaults
@@ -248,10 +213,6 @@ echo Setting up defaults
 ## Remove /media/usb0 mountpoint from fstab as we using usbmount helper
 
 sed -i '/\/media\/usb0/d' $target/etc/fstab
-
-## Add flush option for USB-flash mounted with vfat
-
-./strreplace.sh $target/etc/usbmount/usbmount.conf "^FS_MOUNTOPTIONS" 'FS_MOUNTOPTIONS="-fstype=vfat,flush"'
 
 ## Set localized console and keyboard
 
@@ -351,7 +312,7 @@ ln -s $target/boot/vmlinuz-*-amd64 $target/boot/vmlinuz-xenU
 ln -s $target/boot/initrd.img-*-amd64 $target/boot/initrd.img-xenU
 
 ## Set up symlink /usr/lib/xen for quemu-dm (workaround)
-ln -s $target/usr/lib/xen-4.1 $target/usr/lib/xen
+ln -s $target/usr/lib/xen-4.8 $target/usr/lib/xen
 
 if [ ! -f /proc/mounts ]; then
 	echo Warning: /proc is not mounted. Trying to fix.
@@ -424,22 +385,7 @@ test -n "$proc_mounted" && umount /proc
 umount /media/sci
 umount /stuff
 
-## Add ganeti hooks if any
-
-mkdir -p $target/etc/ganeti/hooks
-cp -r files/ganeti/hooks $target/etc/ganeti/
-
-## Set proper sci instance name for stages.conf
-#sed -i "s/sci/sci.$domain/" $target/etc/ganeti/stages.conf
-
-## Add custom scripts to local/sbin
-cp files/sbin/* $target/usr/local/sbin/
-
-## Add nut configs
-cp files/nut/* $target/etc/nut
-chown root:nut $target/etc/nut/*
-chmod 640 $target/etc/nut/*
-echo "%nut    ALL=NOPASSWD: /usr/local/sbin/gnt-node-shutdown.sh" >> $target/etc/sudoers
+## disable nut-client
 update-rc.d nut-client remove
 
 ## Write motd
