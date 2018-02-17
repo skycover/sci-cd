@@ -94,6 +94,10 @@ echo Building udeb for finish install hooks
 (cd src/sci-finish-install; fakeroot dpkg-buildpackage)
 cp src/sci-finish-install*.udeb local
 
+echo Building udeb for udev persistent net rules
+(cd src/sci-netrules-copy; fakeroot dpkg-buildpackage)
+cp src/sci-netrules-copy*.udeb local
+
 # Clone or pull the requested package from skycover on github
 # branch definition is global
 fetch(){

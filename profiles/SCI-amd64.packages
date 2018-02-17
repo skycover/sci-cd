@@ -70,3 +70,6 @@ uwsgi-plugin-python
 javascript-common
 libjs-jquery
 sci-web
+sci-config
+sci-scripts
+sci-udev-netrules
