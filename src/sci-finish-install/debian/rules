@@ -4,4 +4,6 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 
 install/sci-finish-install::
 	dh_installdebconf
+	install -o root -g root -m 0755 13sci-mount-cdrom debian/$(cdbs_curpkg)/usr/lib/finish-install.d/
 	install -o root -g root -m 0755 70sci-copy-netcfg debian/$(cdbs_curpkg)/usr/lib/finish-install.d/
+	install -o root -g root -m 0755 75sci-udev-netrules debian/$(cdbs_curpkg)/usr/lib/finish-install.d/

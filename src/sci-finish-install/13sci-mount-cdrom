@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# mount cdrom inside /target
+dev=`grep '/cdrom' /proc/mounts|head -1|cut -d' ' -f1`
+mount $dev /target/media/cdrom
+

@@ -76,6 +76,11 @@ d-i apt-setup/services-select multiselect
 d-i apt-setup/security_host string
 d-i apt-setup/volatile_host string
 
+d-i apt-setup/use_mirror boolean false
+d-i apt-setup/cdrom/set-first boolean false
+d-i apt-setup/cdrom/set-next boolean false
+d-i apt-setup/cdrom/set-failed boolean false
+
 
 exim4-config  exim4/dc_eximconfig_configtype  select no configuration at this time
 # XXX use root, but check for mailing permissions

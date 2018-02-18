@@ -352,7 +352,7 @@ if [ -n "$dev" -a -e "$dev" ]; then
 	echo "/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
 
 	echo ...Adding repository data
-	mount /media/sci && apt-cdrom -d=/media/sci add;
+	mount /media/sci && apt-cdrom -d=/media/sci -m add;
 else
 	echo Unable to find CD-ROM device
 	echo "#/stuff/cdimages/sci.iso /media/sci iso9660 loop 0 1" >>$target/etc/fstab
