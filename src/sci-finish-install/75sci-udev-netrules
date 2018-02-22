@@ -32,7 +32,7 @@ EOF
 
 for i in $string; do
 	if (echo $i|grep -qe \^eth) then
-		echo "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"`echo $i|cut -d':' -f 2-7`\", KERNEL=="eth*", NAME=\"`echo $i|cut -d':' -f 1`\"" >> $tmprules
+		echo "SUBSYSTEM==\"net\", ACTION==\"add\", ATTR{address}==\"`echo $i|cut -d':' -f 2-7`\", KERNEL==\"eth*\", NAME=\"`echo $i|cut -d':' -f 1`\"" >> $tmprules
 		echo >> $tmprules
 	fi
 done
