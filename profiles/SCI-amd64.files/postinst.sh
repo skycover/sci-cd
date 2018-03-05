@@ -403,6 +403,9 @@ update-rc.d -f puppet defaults
 ## Set vim disable defaults for 8.0
 sed -i 's/\" let g:skip_defaults_vim = 1/let g:skip_defaults_vim = 1/' $TARGET/etc/vim/vimrc
 
+## Set vim syntax on
+sed -i 's/\"syntax on/syntax on/' $TARGET/etc/vim/vimrc
+
 
 ## Set chrony reboot if there is no sources
 
