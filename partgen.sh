@@ -73,6 +73,12 @@ EOF
 d-i partman-auto/method string regular
 d-i partman-auto/disk string /dev/sda
 d-i partman-auto/expert_recipe string root ::	\\
+	32 10 32 free				\\
+		$gptonly{ }					\\
+		$primary{ }					\\
+		$bios_boot{ }					\\
+		method{ biosgrub }				\\
+	.							\\
 	10240 10 10240 ext4			\\
 		\$lvmignore{ }					\\
 		\$primary{ } \$bootable{ } method{ format }	\\
@@ -94,7 +100,7 @@ EOF
 		mountpoint{ /var }				\\
 EOF
   else
-    lvmvol=sda3
+    lvmvol=sda4
   fi
   cat <<EOF
 	.					\\
@@ -156,6 +162,12 @@ EOF
 
 # Next you need to specify the physical partitions that will be used. 
 d-i partman-auto/expert_recipe string multiraid ::	\\
+	32 10 32 free				\\
+		$gptonly{ }					\\
+		$primary{ }					\\
+		$bios_boot{ }					\\
+		method{ biosgrub }				\\
+	.					\\
 	10240 10 10240 raid			\\
 		\$primary{ } method{ raid }	\\
 	.					\\
@@ -210,13 +222,13 @@ EOF
 
 EOF
   (echo -n d-i partman-auto-raid/recipe string" "
-   echo -n 1 $disks 0 ext4 / `echo $devices|awk -vn=1 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
-   echo -n 1 $disks 0 swap - `echo $devices|awk -vn=2 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
+   echo -n 1 $disks 0 ext4 / `echo $devices|awk -vn=2 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
+   echo -n 1 $disks 0 swap - `echo $devices|awk -vn=3 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
    if [ -n "$partvar" ]; then
-     echo -n 1 $disks 0 ext4 / `echo $devices|awk -vn=3 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
-     lvmpartno=4
+     echo -n 1 $disks 0 ext4 / `echo $devices|awk -vn=4 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.
+     lvmpartno=5
    else
-     lvmpartno=3
+     lvmpartno=4
    fi
    if [ -n "$partlvm" ]; then
      echo $partlvm $disks 0 lvm / `echo $devices|awk -vn=$lvmpartno 'BEGIN{OFS="#";ORS=""}{for(i=1; i<=NF; i++){$i=$i n}; print}'`.

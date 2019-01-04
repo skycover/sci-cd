@@ -57,6 +57,12 @@ d-i netcfg/wireless_wep string
 ####partman
 #### INCLUDE PARTMAN ####
 
+d-i	partman-basicfilesystems/choose_label string gpt
+d-i	partman-basicfilesystems/default_label string gpt
+d-i	partman-partitioning/choose_label string gpt
+d-i	partman-partitioning/default_label string gpt
+d-i	partman/choose_label string gpt
+d-i	partman/default_label string gpt
 ####end of partitioning
 
 
