@@ -4,7 +4,7 @@
 
 set -x
 
-VERSION=3.1
+VERSION=3.2
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 # XXX needed for handling around reloc_domain
