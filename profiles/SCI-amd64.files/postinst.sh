@@ -139,7 +139,7 @@ EOF
 
 cat <<EOF >>interfaces
 
-# The exmample for static IP on WAN interface
+# The example for static IP on WAN interface
 # on the second ethernet card
 
 #auto wan
@@ -241,7 +241,7 @@ exit 0
 EOF
 chmod +x $target/etc/rc.local
 
-## Add "xm sched-credit -d0 -w512" to rc.sci
+## Add "xl sched-credit -d0 -w512" to rc.sci
 # equal priority of Dom0 make problems on the block devices
 
 ## Tune storage scheduler for better disk latency
@@ -253,7 +253,7 @@ cat <<EOFF >$target/etc/rc.sci
 # If you use hardware raid or external FC/Infiniband storage, you prorably would rather use noop scheduler instead of deadline
 
 # rise priority for dom0, alowing drbd to work fine
-xm sched-credit -d0 -w512
+xl sched-credit -d0 -w512
 
 modprobe sg
 disks=\`sg_map -i|awk '{print substr(\$2, length(\$2))}'\`
