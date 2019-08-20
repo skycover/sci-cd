@@ -124,3 +124,6 @@ openbsd-inetd
 
 # entropy generator
 rng-tools
+
+# auto failover
+sci-autofailover
