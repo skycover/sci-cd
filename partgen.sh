@@ -73,7 +73,7 @@ EOF
 d-i partman-auto/method string regular
 d-i partman-auto/disk string /dev/sda
 d-i partman-auto/expert_recipe string root ::	\\
-	32 10 32 free				\\
+	256 10 256 free				\\
 		$gptonly{ }					\\
 		$primary{ }					\\
 		$bios_boot{ }					\\
@@ -127,8 +127,8 @@ EOF
   fi
   ;;
   *)
-  devices=`echo /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh|cut -d' ' -f-$disks`
-  grub_devices=`echo '(hd0,0) (hd1,0) (hd2,0) (hd3,0) (hd4,0) (hd5,0) (hd6,0) (hd7,0)'|cut -d' ' -f-$disks`
+  devices=`echo /dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh /dev/sdi /dev/sdj /dev/sdk /dev/sdl|cut -d' ' -f-$disks`
+  grub_devices=`echo '(hd0,0) (hd1,0) (hd2,0) (hd3,0) (hd4,0) (hd5,0) (hd6,0) (hd7,0) (hd8,0) (hd9,0) (hd10,0) (hd11,0)'|cut -d' ' -f-$disks`
   if [ -z "$devices" ]; then
     echo "-d expects the number of disks"
     usage
@@ -162,7 +162,7 @@ EOF
 
 # Next you need to specify the physical partitions that will be used. 
 d-i partman-auto/expert_recipe string multiraid ::	\\
-	32 10 32 free				\\
+	256 10 256 free				\\
 		$gptonly{ }					\\
 		$primary{ }					\\
 		$bios_boot{ }					\\

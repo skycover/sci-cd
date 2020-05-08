@@ -1,14 +1,11 @@
 Template: chose-partman-recipe/recipe
 Type: select
 Default: Manual
-Choices: Manual, 1 disk with LVM, 1 disk with deferred LVM, 2 disks with LVM, 2 disks with deferred LVM, 4 disks with LVM, 6 disks with LVM, 8 disks with LVM
+Choices: Manual, 1 disk, 2 disks, 4 disks, 6 disks, 8 disks, 10 disks, 12 disks
 Description: Chose partitioning recipe
  Please chose the one of predefined partitioning schemes, which will create:
-  * root (10G) and swap (2G) primary partitions
-  * LVM volume group named "xenvg" with volume system-stuff (20G)
- .
- If LVM setup is deferred, then it should be initialized later via "sci-setup xenvg"
-  It can be placed on the same or on the another devices.
+  * root (10G) and swap (1G) primary partitions
+  * LVM volume group named "xenvg" with volume system-stuff (10G)
  .
  If you chose two or more disks, the software RAID will be used as follows:
    - root and swap will be on RAID1 with mirrors on all of the disks

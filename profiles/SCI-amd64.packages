@@ -62,9 +62,9 @@ sysvinit-core
 sysvinit-utils
 bash-completion
 gawk
-python-django
+python3-django
 nginx
-python-requests
+python3-requests
 uwsgi
 uwsgi-plugin-python
 javascript-common
@@ -74,3 +74,8 @@ sci-config
 sci-scripts
 sci-udev-netrules
 zsh
+gettext
+python3-django-background-tasks
+python3-magic
+cifs-utils
+apache2-utils

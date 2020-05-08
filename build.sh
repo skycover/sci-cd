@@ -70,12 +70,14 @@ if [ -z "$disks" ]; then
   cp profiles/default.preseed.$profile.in profiles/default.preseed
   echo "#no options" >src/chose-partman-recipe/manual.preseed
   ./partgen.sh -d 1 -l 1 >src/chose-partman-recipe/d1l1.preseed
-  ./partgen.sh -d 1 -l none >src/chose-partman-recipe/d1lnone.preseed
+ # ./partgen.sh -d 1 -l none >src/chose-partman-recipe/d1lnone.preseed
   ./partgen.sh -d 2 -l 1 >src/chose-partman-recipe/d2l1.preseed
-  ./partgen.sh -d 2 -l none >src/chose-partman-recipe/d2lnone.preseed
+ # ./partgen.sh -d 2 -l none >src/chose-partman-recipe/d2lnone.preseed
   ./partgen.sh -d 4 -l 10 >src/chose-partman-recipe/d4l10.preseed
   ./partgen.sh -d 6 -l 10 >src/chose-partman-recipe/d6l10.preseed
   ./partgen.sh -d 8 -l 10 >src/chose-partman-recipe/d8l10.preseed
+  ./partgen.sh -d 10 -l 10 >src/chose-partman-recipe/d10l10.preseed
+  ./partgen.sh -d 12 -l 10 >src/chose-partman-recipe/d12l10.preseed
   (cd src/chose-partman-recipe; fakeroot dpkg-buildpackage)
   mkdir -p local
   cp src/chose-partman-recipe*.udeb local

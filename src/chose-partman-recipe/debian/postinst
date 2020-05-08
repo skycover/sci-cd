@@ -12,26 +12,26 @@ error () {
 
 db_get chose-partman-recipe/recipe || true
 case "$RET" in
-"1 disk with LVM")
+"1 disk")
 	debconf-set-selections /usr/lib/chose-partman-recipe/d1l1.preseed
 ;;
-"1 disk with deferred LVM")
-	debconf-set-selections /usr/lib/chose-partman-recipe/d1lnone.preseed
-;;
-"2 disks with LVM")
+"2 disks")
 	debconf-set-selections /usr/lib/chose-partman-recipe/d2l1.preseed
 ;;
-"2 disks with deferred LVM")
-	debconf-set-selections /usr/lib/chose-partman-recipe/d2lnone.preseed
-;;
-"4 disks with LVM")
+"4 disks")
 	debconf-set-selections /usr/lib/chose-partman-recipe/d4l10.preseed
 ;;
-"6 disks with LVM")
+"6 disks")
 	debconf-set-selections /usr/lib/chose-partman-recipe/d6l10.preseed
 ;;
-"8 disks with LVM")
+"8 disks")
 	debconf-set-selections /usr/lib/chose-partman-recipe/d8l10.preseed
+;;
+"10 disks")
+	debconf-set-selections /usr/lib/chose-partman-recipe/d10l10.preseed
+;;
+"12 disks")
+	debconf-set-selections /usr/lib/chose-partman-recipe/d12l10.preseed
 ;;
 "Manual")
 	debconf-set-selections /usr/lib/chose-partman-recipe/manual.preseed
