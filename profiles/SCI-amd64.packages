@@ -66,13 +66,14 @@ python3-django
 nginx
 python3-requests
 uwsgi
-uwsgi-plugin-python
+uwsgi-plugin-python3
 javascript-common
 libjs-jquery
 sci-web
 sci-config
 sci-scripts
 sci-udev-netrules
+sci-mond
 zsh
 gettext
 python3-django-background-tasks

@@ -2,6 +2,8 @@
 # needed uuencode/decode (sharutils)
 # need cdbs to assemble chose-partman-recipe udeb
 #
+export LOGOPNG=/home/bluetooth/develop/sci-cd/logo_installer.png
+export SPLASHPNG=/home/bluetooth/develop/sci-cd/splash.png
 
 usage(){
   cat <<EOF >&2
